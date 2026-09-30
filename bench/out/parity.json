@@ -1,0 +1,329 @@
+{
+  "summary": {
+    "better": 30,
+    "same": 33,
+    "differs": 1
+  },
+  "rows": [
+    {
+      "name": "distance",
+      "verdict": "better",
+      "detail": "turf 1067078.9 m vs geodesic 1065615.5 m — turf off by 0.1373%"
+    },
+    {
+      "name": "bearing",
+      "verdict": "better",
+      "detail": "turf 153.0451° vs ellipsoidal 152.9465° (0.0985° apart)"
+    },
+    {
+      "name": "destination",
+      "verdict": "better",
+      "detail": "1022 m apart after 500 km"
+    },
+    {
+      "name": "length",
+      "verdict": "better",
+      "detail": "turf 153796.7 m vs 154055.8 m"
+    },
+    {
+      "name": "area",
+      "verdict": "better",
+      "detail": "turf 9540512136 m² vs 9549520094 m² (0.0943%)"
+    },
+    {
+      "name": "midpoint",
+      "verdict": "better",
+      "detail": "194 m apart"
+    },
+    {
+      "name": "along",
+      "verdict": "better",
+      "detail": "116.6 m apart at 50 km"
+    },
+    {
+      "name": "nearestPointOnLine",
+      "verdict": "same",
+      "detail": "157.52 m apart"
+    },
+    {
+      "name": "pointToLineDistance",
+      "verdict": "better",
+      "detail": "turf 9161.7 m vs 9302.6 m"
+    },
+    {
+      "name": "rhumbDistance",
+      "verdict": "better",
+      "detail": "turf 1067197.2 m vs ellipsoidal 1065733.6 m (0.1373%)"
+    },
+    {
+      "name": "rhumbBearing",
+      "verdict": "same",
+      "detail": "turf 154.60306° vs 154.50443°"
+    },
+    {
+      "name": "rhumbDestination",
+      "verdict": "better",
+      "detail": "978 m apart"
+    },
+    {
+      "name": "circle",
+      "verdict": "better",
+      "detail": "turf radius spread 39.7 m vs 0.000 m"
+    },
+    {
+      "name": "buffer",
+      "verdict": "better",
+      "detail": "turf edge distance spread 200 m vs 0.00 m at 50 km"
+    },
+    {
+      "name": "lineOffset",
+      "verdict": "better",
+      "detail": "turf 999/999 m vs 1000/1000 m for a 1 km offset"
+    },
+    {
+      "name": "ellipse",
+      "verdict": "better",
+      "detail": "turf semi-major 20050 m vs 20000 m for 20 km"
+    },
+    {
+      "name": "intersect",
+      "verdict": "same",
+      "detail": "areas 12359952037 vs 12304814781 m² (turf's is spherical)"
+    },
+    {
+      "name": "union",
+      "verdict": "same",
+      "detail": "areas 86512134336 vs 86126408268 m²"
+    },
+    {
+      "name": "difference",
+      "verdict": "same",
+      "detail": "areas 37087388327 vs 36921742796 m²"
+    },
+    {
+      "name": "kinks",
+      "verdict": "same",
+      "detail": "1 vs 1 self-intersections"
+    },
+    {
+      "name": "unkinkPolygon",
+      "verdict": "same",
+      "detail": "2 vs 2 pieces"
+    },
+    {
+      "name": "lineSegment",
+      "verdict": "same",
+      "detail": "2 vs 2 segments"
+    },
+    {
+      "name": "lineSplit",
+      "verdict": "same",
+      "detail": "2 vs 2 parts"
+    },
+    {
+      "name": "lineOverlap",
+      "verdict": "same",
+      "detail": "1 vs 1 shared runs"
+    },
+    {
+      "name": "squareGrid",
+      "verdict": "better",
+      "detail": "turf cell areas vary by 0.1462% of nominal, geoprecise by 0.0005%"
+    },
+    {
+      "name": "hexGrid",
+      "verdict": "better",
+      "detail": "median cell 1.001× nominal (turf) vs 1.000×; 6 vs 15 cells"
+    },
+    {
+      "name": "pointGrid",
+      "verdict": "better",
+      "detail": "neighbour spacing 4992 m (turf) vs 5000 m for a 5 km grid"
+    },
+    {
+      "name": "triangleGrid",
+      "verdict": "better",
+      "detail": "70 vs 48 cells; median area 1.000× nominal (turf) vs 1.000×"
+    },
+    {
+      "name": "rectangleGrid",
+      "verdict": "better",
+      "detail": "56 vs 42 cells; median area 0.777× nominal (turf) vs 1.000×"
+    },
+    {
+      "name": "square",
+      "verdict": "same",
+      "detail": "[0,-1,4,3] vs [0,-1,4,3]"
+    },
+    {
+      "name": "envelope",
+      "verdict": "same",
+      "detail": "[1,1,3,4] vs [1,1,3,4]"
+    },
+    {
+      "name": "isolines",
+      "verdict": "same",
+      "detail": "contour x deviates from the level by 0.0e+0° (turf) vs 1.4e-13°"
+    },
+    {
+      "name": "isobands",
+      "verdict": "better",
+      "detail": "bands cover 1.0000 of the domain (turf) vs 1.0000"
+    },
+    {
+      "name": "tin",
+      "verdict": "same",
+      "detail": "400 vs 400 triangles, covering 1.000000 vs 1.000000 of the hull"
+    },
+    {
+      "name": "voronoi",
+      "verdict": "differs",
+      "detail": "cells cover 1.00000 of the bbox (turf) vs 0.99989; bisectors are straight in the metric plane, so writing them as lon/lat chords leaves a hairline along each shared edge"
+    },
+    {
+      "name": "interpolate",
+      "verdict": "better",
+      "detail": "0 vs 18 cells over a 0.02°-tall bbox — turf's degree-converted cells are taller than the box, so it returns nothing"
+    },
+    {
+      "name": "planepoint",
+      "verdict": "same",
+      "detail": "116.000000 vs 116.000000 at a corner"
+    },
+    {
+      "name": "clustersDbscan",
+      "verdict": "same",
+      "detail": "2/2 clusters, 1/1 noise points"
+    },
+    {
+      "name": "clustersKmeans",
+      "verdict": "better",
+      "detail": "2/2 clusters; geoprecise seeds deterministically, so the result repeats"
+    },
+    {
+      "name": "nearestNeighborAnalysis",
+      "verdict": "better",
+      "detail": "index 0.0877 (turf) vs 0.3375; closed form for this pattern is 0.3362"
+    },
+    {
+      "name": "standardDeviationalEllipse",
+      "verdict": "better",
+      "detail": "turf axes 0.0052/0.2001 (degrees, skewed by latitude) vs 20.3382/0.5108 km"
+    },
+    {
+      "name": "directionalMean",
+      "verdict": "same",
+      "detail": "cartesian angle 45.115° (turf) vs 45.000°"
+    },
+    {
+      "name": "shortestPath",
+      "verdict": "better",
+      "detail": "turf 41.04 km vs 36.89 km (straight line 34.65 km); geoprecise pulls the staircase taut"
+    },
+    {
+      "name": "shortestPath (clear)",
+      "verdict": "better",
+      "detail": "34.6506 km vs the straight line 34.6505 km"
+    },
+    {
+      "name": "convertLength",
+      "verdict": "same",
+      "detail": "1609.344000 vs 1609.344000"
+    },
+    {
+      "name": "convertArea",
+      "verdict": "same",
+      "detail": "1000000 vs 1000000"
+    },
+    {
+      "name": "bearingToAzimuth",
+      "verdict": "same",
+      "detail": "315 vs 315"
+    },
+    {
+      "name": "radiansToLength",
+      "verdict": "same",
+      "detail": "6371008.8 vs 6371008.8"
+    },
+    {
+      "name": "coordAll",
+      "verdict": "same",
+      "detail": "10 vs 10 positions"
+    },
+    {
+      "name": "segmentEach",
+      "verdict": "same",
+      "detail": "8 vs 8 segments"
+    },
+    {
+      "name": "centroid",
+      "verdict": "same",
+      "detail": "[1,1] vs [1,1]"
+    },
+    {
+      "name": "centerMean",
+      "verdict": "same",
+      "detail": "[0.5,0.5] vs [0.5,0.5]"
+    },
+    {
+      "name": "centerMedian",
+      "verdict": "same",
+      "detail": "626 m from the cluster centre (turf) vs 423 m, against 28007 m for the mean"
+    },
+    {
+      "name": "booleanClockwise",
+      "verdict": "same",
+      "detail": "true vs true"
+    },
+    {
+      "name": "combine",
+      "verdict": "same",
+      "detail": "4 vs 4 positions merged"
+    },
+    {
+      "name": "lineArc",
+      "verdict": "better",
+      "detail": "turf radius spread 19.8 m vs 0.0000 m"
+    },
+    {
+      "name": "tesselate",
+      "verdict": "same",
+      "detail": "8 vs 8 triangles, covering 1.000000 vs 1.000000 of the polygon"
+    },
+    {
+      "name": "distanceWeight",
+      "verdict": "better",
+      "detail": "interior point has 63 neighbours at turf threshold 1.2 and 2 at 0.0095 (degrees), against 4 for a 1.2 km geodesic radius"
+    },
+    {
+      "name": "moranIndex",
+      "verdict": "better",
+      "detail": "ramp I = -0.0159 / 1.0000 (turf, at those two thresholds) vs 0.9375; expectation -0.0159"
+    },
+    {
+      "name": "quadratAnalysis",
+      "verdict": "better",
+      "detail": "on a perfect lattice turf's degree quadrats give uneven counts and reject randomness (false); equal-area quadrats give [4,4,4,4]… so chi² is 0.0 and the variance-to-mean ratio 0.00 is what reports the regularity"
+    },
+    {
+      "name": "center",
+      "verdict": "same",
+      "detail": "[2,1] vs [2,1]"
+    },
+    {
+      "name": "convex",
+      "verdict": "same",
+      "detail": "hull areas 24723670182 vs 24615711464 m²"
+    },
+    {
+      "name": "booleanValid",
+      "verdict": "same",
+      "detail": "true / true for a square, true / false for a bowtie"
+    },
+    {
+      "name": "geojsonRbush",
+      "verdict": "same",
+      "detail": "4 vs 4 hits; collides true / true"
+    }
+  ]
+}

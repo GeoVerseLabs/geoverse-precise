@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>geoprecise vs turf 缓冲区对比</title>
+    <style>
+      :root {
+        --bg: #f7f7f5;
+        --panel: #ffffff;
+        --text: #1d1d1b;
+        --muted: #6b6b66;
+        --line: #e3e3de;
+        --turf: #d9480f;
+        --gp: #1c6dd0;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; font: 14px/1.5 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: var(--text); background: var(--bg); }
+      #app { display: grid; grid-template-columns: 380px 1fr; height: 100%; }
+      aside { background: var(--panel); border-right: 1px solid var(--line); padding: 16px; overflow: auto; }
+      h1 { font-size: 16px; margin: 0 0 4px; }
+      p.sub { margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+      fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 12px; padding: 10px 12px; }
+      legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
+      label { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+      input[type=range] { flex: 1; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; }
+      button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 4px 10px; cursor: pointer; font: inherit; }
+      button.active { background: var(--text); color: #fff; border-color: var(--text); }
+      table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+      th, td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+      th:first-child, td:first-child { text-align: left; }
+      .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+      .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+      #map { height: 100%; }
+      @media (max-width: 760px) {
+        #app { grid-template-columns: 1fr; grid-template-rows: auto 60vh; }
+        aside { border-right: 0; border-bottom: 1px solid var(--line); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <aside>
+        <h1>缓冲区精度对比</h1>
+        <p class="sub">turf.js（球面 + 单一等距方位投影） vs geoprecise（WGS84 椭球大地线）</p>
+
+        <fieldset>
+          <legend>绘制</legend>
+          <div class="row" id="modes">
+            <button data-mode="point" class="active">点</button>
+            <button data-mode="line">线</button>
+            <button data-mode="polygon">面</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button id="finish">完成绘制</button>
+            <button id="clear">清空</button>
+            <button id="sample">示例：京沪线</button>
+          </div>
+          <div class="hint">点模式单击即出结果；线 / 面模式逐点单击，然后点“完成绘制”。</div>
+        </fieldset>
+
+        <fieldset>
+          <legend>参数</legend>
+          <label>半径 <input id="radius" type="range" min="0.1" max="300" step="0.1" value="50" /> <span id="radiusLabel"></span></label>
+          <label><input id="projected" type="checkbox" /> geoprecise 使用 projected（快速）方法</label>
+          <label><input id="geodesicEdges" type="checkbox" /> 边按大地线解释（默认按经纬度直线）</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>底图</legend>
+          <div class="row" id="basemaps">
+            <button data-base="osm" class="active">OSM（WGS84）</button>
+            <button data-base="amap">高德（GCJ-02）</button>
+          </div>
+          <div class="hint">切到高德底图时，数据用 <code>transform(…, 'WGS84', 'GCJ02')</code> 转换后再叠加，否则会整体偏移几百米。</div>
+        </fieldset>
+
+        <fieldset>
+          <legend>结果（顶点到输入几何的真实距离误差）</legend>
+          <table>
+            <thead><tr><th></th><th>最大误差</th><th>相对</th><th>耗时</th></tr></thead>
+            <tbody>
+              <tr><td><span class="swatch" style="background:var(--turf)"></span>turf</td><td id="tErr">–</td><td id="tRel">–</td><td id="tMs">–</td></tr>
+              <tr><td><span class="swatch" style="background:var(--gp)"></span>geoprecise</td><td id="gErr">–</td><td id="gRel">–</td><td id="gMs">–</td></tr>
+            </tbody>
+          </table>
+          <div class="hint" id="note"></div>
+        </fieldset>
+      </aside>
+      <div id="map"></div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

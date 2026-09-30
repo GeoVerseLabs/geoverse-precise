@@ -1,0 +1,27 @@
+# 仓库内统一 LF。Windows 下检出也保持 LF，避免 bash 脚本因 CRLF 报错、
+# 避免 rustfmt / tsc 的输出在不同机器上产生整文件换行差异。
+* text=auto eol=lf
+
+*.sh    text eol=lf
+*.rs    text eol=lf
+*.toml  text eol=lf
+*.ts    text eol=lf
+*.mjs   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.py    text eol=lf
+
+# 锁文件：不做文本合并，冲突时重新生成
+Cargo.lock        -diff merge=binary linguist-generated
+package-lock.json -diff merge=binary linguist-generated
+
+# 基准数据：体积大、机器生成，diff 无意义
+bench/fixtures/*.json -diff linguist-generated
+bench/out/*.json      -diff linguist-generated
+
+# 二进制
+*.wasm binary
+*.png  binary
+*.jpg  binary
+*.zip  binary

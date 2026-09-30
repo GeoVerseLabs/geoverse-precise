@@ -1,0 +1,32 @@
+{
+  "name": "geoprecise",
+  "version": "0.3.0",
+  "description": "Ellipsoid-accurate spatial analysis in WebAssembly: geodesic measurement, China CRS (GCJ-02 / BD-09 / CGCS2000) transforms, geodesic buffers and robust overlay. turf-style API.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./wasm/*": "./wasm/*"
+  },
+  "files": [
+    "dist",
+    "wasm"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build:wasm": "../../scripts/build-wasm.sh",
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.mjs"
+  },
+  "keywords": ["gis", "geodesic", "turf", "wasm", "gcj02", "bd09", "cgcs2000", "buffer"],
+  "license": "MIT OR Apache-2.0",
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

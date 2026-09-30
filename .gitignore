@@ -1,0 +1,31 @@
+# ---- Rust ----
+target/
+
+# ---- Node ----
+node_modules/
+*.tsbuildinfo
+
+# ---- 构建产物（均可由源码重新生成，不入库）----
+# TS 编译输出：cd packages/geoprecise && npm run build
+packages/geoprecise/dist/
+# wasm-bindgen 输出：./scripts/build-wasm.sh
+packages/geoprecise/wasm/
+# 演示页打包输出：cd examples/web-demo && npm run build
+examples/web-demo/dist/
+# 精度脚本生成的大文件（~480 KB）：cd bench && node accuracy.mjs
+bench/out/buffers.json
+*.tgz
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+
+# ---- 系统 / 编辑器 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.log

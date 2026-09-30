@@ -1,0 +1,22 @@
+[package]
+name = "geoprecise-core"
+description = "Ellipsoid-accurate spatial analysis: geodesic measurement, China CRS transforms, geodesic buffer & robust overlay"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+index-stats = []
+
+[dependencies]
+geo = { workspace = true }
+geographiclib-rs = { workspace = true }
+geojson = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+spade = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+approx = "0.5"
