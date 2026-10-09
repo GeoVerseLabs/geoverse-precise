@@ -41,7 +41,7 @@ jobs:
         run: cargo test -p geoverse-precise-core --release
 
   clippy-latest:
-    name: clippy（最新 stable，仅提示）
+    name: clippy（最新 stable，仅提示，失败不阻塞）
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -50,13 +50,19 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: cargo clippy（警告转为注释）
+      - name: cargo clippy -D warnings（结果转为注释）
         run: |
-          echo "::notice::$(rustc --version)"
-          cargo clippy --workspace --all-targets --message-format=short 2>&1 | tee clippy.txt
+          set +e
+          cargo clippy --workspace --all-targets --message-format=short -- -D warnings > clippy.txt 2>&1
+          code=$?
+          cat clippy.txt
+          echo "::notice::$(rustc --version) / clippy exit code ${code}"
           grep -E '^[^ ]+\.rs:[0-9]+:[0-9]+: (warning|error)' clippy.txt \
-            | sed -E 's/^([^:]+):([0-9]+):([0-9]+): (warning|error)(\[[^]]*\])?: (.*)$/::warning file=\1,line=\2,col=\3::\4: \6/' \
-            || true
+            | sed -E 's/^([^:]+):([0-9]+):([0-9]+): (warning|error)(\[[^]]*\])?: (.*)$/::warning file=\1,line=\2,col=\3::\4: \6/'
+          # 非源码定位的错误（依赖、工具链等）也转成注释，最多 20 行
+          grep -E '^(error|warning)' clippy.txt | grep -v -E '^warning: .* generated [0-9]+ warning' | head -20 \
+            | sed -E 's/^(.*)$/::warning::\1/'
+          exit "${code}"
 
   wasm:
     name: WASM + TypeScript 包
