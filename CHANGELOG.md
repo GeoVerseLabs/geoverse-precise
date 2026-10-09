@@ -44,6 +44,7 @@
 - `CONTRIBUTING.md`（环境、流程、提交约定、发布步骤）与 `SECURITY.md`。
 - GitHub 配置：CI 工作流（fmt / clippy / test、编译 wasm 并跑 TS 测试、产出 npm 包）、
   标签触发的 Release 工作流、Dependabot、Issue 模板（缺陷 / 精度问题 / 功能建议）与 PR 模板。
+- CI 构建演示页并在无头浏览器中做冒烟测试（`examples/web-demo/smoke.mjs`），覆盖仅靠构建发现不了的运行期问题。
 
 ### 计划（来自 DESIGN.md §8）
 - `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。

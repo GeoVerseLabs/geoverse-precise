@@ -87,7 +87,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: packages/geoverse-precise/package-lock.json
+          cache-dependency-path: |
+            packages/geoverse-precise/package-lock.json
+            examples/web-demo/package-lock.json
       - name: 编译并测试 TS 封装
         working-directory: packages/geoverse-precise
         run: |
@@ -99,6 +101,19 @@ jobs:
         run: |
           cp ../../LICENSE-MIT ../../LICENSE-APACHE .
           npm pack
+      - name: 构建演示页
+        working-directory: examples/web-demo
+        run: |
+          npm ci
+          npm run build
+      - name: 演示页冒烟测试（无头浏览器）
+        working-directory: examples/web-demo
+        run: |
+          npx vite preview --port 4173 --strictPort &
+          npm i --no-save --no-audit --no-fund playwright@1.64.0
+          npx playwright install --with-deps chromium
+          for i in $(seq 30); do curl -sf http://localhost:4173/ >/dev/null && break; sleep 1; done
+          node smoke.mjs http://localhost:4173/
       - uses: actions/upload-artifact@v7
         with:
           name: geoverse-precise-npm

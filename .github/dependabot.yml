@@ -21,6 +21,10 @@ updates:
     groups:
       npm-minor:
         update-types: [minor, patch]
+    ignore:
+      # @types/node 的主版本应跟随支持的最低 Node 版本（≥ 18，CI 用 22），不随最新 Node 升级
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
