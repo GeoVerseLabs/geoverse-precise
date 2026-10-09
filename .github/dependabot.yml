@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      cargo-minor:
+        update-types: [minor, patch]
+    ignore:
+      # wasm-bindgen 与 CI 中的 wasm-bindgen-cli 版本必须严格一致，需手动同步升级
+      - dependency-name: wasm-bindgen
+
+  - package-ecosystem: npm
+    directories:
+      - /packages/geoverse-precise
+      - /bench
+      - /examples/web-demo
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

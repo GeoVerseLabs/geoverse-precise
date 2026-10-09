@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # 必须与 crates/wasm/Cargo.toml 中锁定的 wasm-bindgen 版本一致
+  WASM_BINDGEN_VERSION: 0.2.128
+
+jobs:
+  rust:
+    name: Rust（fmt / clippy / test）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo fmt
+        run: cargo fmt --all -- --check
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: cargo test（含 GeographicLib / PROJ 对照）
+        run: cargo test -p geoverse-precise-core --release
+
+  wasm:
+    name: WASM + TypeScript 包
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm-bindgen-${{ env.WASM_BINDGEN_VERSION }}
+      - name: 安装 wasm-bindgen-cli
+        run: |
+          if ! wasm-bindgen --version 2>/dev/null | grep -q " ${WASM_BINDGEN_VERSION}"; then
+            cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked --force
+          fi
+          wasm-bindgen --version
+      - name: 编译 wasm
+        run: ./scripts/build-wasm.sh
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/geoverse-precise/package-lock.json
+      - name: 编译并测试 TS 封装
+        working-directory: packages/geoverse-precise
+        run: |
+          npm ci
+          npm run build
+          npm test
+      - name: 打包 npm tarball
+        working-directory: packages/geoverse-precise
+        run: |
+          cp ../../LICENSE-MIT ../../LICENSE-APACHE .
+          npm pack
+      - uses: actions/upload-artifact@v7
+        with:
+          name: geoverse-precise-npm
+          path: packages/geoverse-precise/*.tgz
+          retention-days: 14

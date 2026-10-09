@@ -1,0 +1,50 @@
+name: 精度问题
+description: 计算结果与权威参考（GeographicLib / PROJ / 实测）不一致，或坐标转换存在偏移
+labels: [accuracy]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        精度问题需要一个**可信的参考值**才能定位。请尽量给出参考值的来源与计算方式。
+        已知限制见 [docs/DESIGN.md](https://github.com/GeoVerseLabs/geoverse-precise/blob/main/docs/DESIGN.md) 第 7 节。
+  - type: input
+    id: function
+    attributes:
+      label: 函数
+      placeholder: distance / area / buffer / transform ...
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: 输入与选项
+      description: 输入几何（GeoJSON）以及 units / crs / edges / tolerance / method 等选项
+      render: json
+    validations:
+      required: true
+  - type: dropdown
+    id: crs
+    attributes:
+      label: 输入坐标系
+      options:
+        - WGS84 / EPSG:4326
+        - CGCS2000 / EPSG:4490
+        - GCJ-02（高德 / 腾讯）
+        - BD-09（百度）
+        - CGCS2000 高斯-克吕格（EPSG:4491–4554）
+        - UTM
+        - 其他 / 自定义 tmerc
+    validations:
+      required: true
+  - type: textarea
+    id: values
+    attributes:
+      label: 结果对比
+      description: geoverse-precise 的结果、参考值、参考值来源（GeographicLib / pyproj / 测绘成果 / 官方接口）、差值
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      placeholder: 0.3.0 / commit hash

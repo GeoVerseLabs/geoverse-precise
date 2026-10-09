@@ -1,0 +1,76 @@
+name: Release
+
+# 推送 vX.Y.Z 标签时：校验版本号一致 → 编译 wasm → 测试 → 打包 → 创建 GitHub Release 并附上预编译产物。
+# 不自动发布到 npm / crates.io。
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  WASM_BINDGEN_VERSION: 0.2.128
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 校验标签与清单版本号一致
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          CARGO_VER=$(grep -m1 -E '^version *= *"' Cargo.toml | sed -E 's/.*"(.*)".*/\1/')
+          NPM_VER=$(node -p "require('./packages/geoverse-precise/package.json').version")
+          echo "tag=$TAG cargo=$CARGO_VER npm=$NPM_VER"
+          if [ "$TAG" != "$CARGO_VER" ] || [ "$TAG" != "$NPM_VER" ]; then
+            echo "::error::标签 v$TAG 与 Cargo.toml ($CARGO_VER) / package.json ($NPM_VER) 不一致"
+            exit 1
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm-bindgen-${{ env.WASM_BINDGEN_VERSION }}
+      - name: 安装 wasm-bindgen-cli
+        run: |
+          if ! wasm-bindgen --version 2>/dev/null | grep -q " ${WASM_BINDGEN_VERSION}"; then
+            cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked --force
+          fi
+      - name: Rust 测试
+        run: cargo test -p geoverse-precise-core --release
+      - name: 编译 wasm
+        run: ./scripts/build-wasm.sh
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: 编译、测试并打包 TS 封装
+        working-directory: packages/geoverse-precise
+        run: |
+          npm ci
+          npm run build
+          npm test
+          cp ../../LICENSE-MIT ../../LICENSE-APACHE .
+          npm pack
+
+      - name: 从 CHANGELOG 提取本版本说明
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          awk -v v="$VER" '
+            $0 ~ "^## \\[" v "\\]" {on=1; next}
+            on && /^## \[/ {exit}
+            on {print}
+          ' CHANGELOG.md > release-notes.md
+          [ -s release-notes.md ] || echo "见 CHANGELOG.md" > release-notes.md
+          cat release-notes.md
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: geoverse-precise ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: packages/geoverse-precise/*.tgz

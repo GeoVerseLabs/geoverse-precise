@@ -1,0 +1,43 @@
+name: 缺陷报告
+description: 报错、崩溃、返回值结构不对、与文档不符
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 问题描述
+      description: 调用了哪个函数，期望什么，实际得到什么
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 最小复现
+      description: 一段可直接运行的代码，包含输入的 GeoJSON（坐标可脱敏/平移，但请保留问题）
+      render: ts
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: geoverse-precise 版本
+      placeholder: 0.3.0 / commit hash
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: 运行环境
+      multiple: true
+      options:
+        - 浏览器（Chrome / Edge）
+        - 浏览器（Firefox）
+        - 浏览器（Safari）
+        - Node.js
+        - Rust（直接使用 geoverse-precise-core）
+        - 其他
+  - type: textarea
+    id: extra
+    attributes:
+      label: 其他信息
+      description: 控制台报错、浏览器 / Node 版本、打包工具（Vite / Webpack）等
