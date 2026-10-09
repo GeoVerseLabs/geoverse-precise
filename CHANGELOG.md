@@ -36,7 +36,13 @@
 ### 变更
 - 全部 Rust 源码按 `rustfmt.toml` 统一格式化（纯格式，无逻辑改动；`cargo test` 结果不变）。
 - 新增本更新日志；README 增加「版本管理」一节。
-- Cargo 与 npm 清单补充 `repository` / `homepage` / `bugs` 等元数据。
+- Cargo 与 npm 清单补充 `repository` / `homepage` / `bugs` 等元数据；npm 包内附带许可证文件。
+
+### 新增
+- 许可证文件 `LICENSE-MIT`、`LICENSE-APACHE`（此前仅在清单中声明 `MIT OR Apache-2.0`）。
+- `CONTRIBUTING.md`（环境、流程、提交约定、发布步骤）与 `SECURITY.md`。
+- GitHub 配置：CI 工作流（fmt / clippy / test、编译 wasm 并跑 TS 测试、产出 npm 包）、
+  标签触发的 Release 工作流、Dependabot、Issue 模板（缺陷 / 精度问题 / 功能建议）与 PR 模板。
 
 ### 计划（来自 DESIGN.md §8）
 - `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。

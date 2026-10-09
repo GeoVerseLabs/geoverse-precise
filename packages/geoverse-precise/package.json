@@ -23,7 +23,9 @@
   },
   "files": [
     "dist",
-    "wasm"
+    "wasm",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
   ],
   "sideEffects": false,
   "scripts": {

@@ -15,6 +15,8 @@ examples/web-demo/dist/
 # 精度脚本生成的大文件（~480 KB）：cd bench && node accuracy.mjs
 bench/out/buffers.json
 *.tgz
+# 打包时从仓库根目录复制进来的许可证
+packages/geoverse-precise/LICENSE-*
 
 # ---- Python ----
 __pycache__/

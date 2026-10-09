@@ -1,5 +1,11 @@
 # geoverse-precise
 
+[![CI](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml/badge.svg)](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#许可)
+
+> Ellipsoid-accurate spatial analysis for the browser, written in Rust and compiled to WebAssembly.
+> A drop-in replacement for turf.js (all 184 exports) with WGS84 geodesics and China CRS support (CGCS2000 / GCJ-02 / BD-09).
+
 Rust 编写、编译为 WebAssembly 的**椭球精度**客户端空间分析库，API 与 turf.js 对齐，用来替换 turf 中会产生失真、偏移的计算。
 
 - **测量**：距离、方位角、目标点、中点、长度、面积、沿线取点、最近点、点到线距离 —— 全部基于 WGS84 椭球上的 Karney 大地线算法
@@ -17,6 +23,18 @@ Rust 编写、编译为 WebAssembly 的**椭球精度**客户端空间分析库�
 
 **turf 的 184 个导出全部同名覆盖**，逐函数对照见 [docs/TURF-COVERAGE.md](docs/TURF-COVERAGE.md)。
 精度实测见 [docs/ACCURACY.md](docs/ACCURACY.md)，性能剖析与优化见 [docs/PERFORMANCE.md](docs/PERFORMANCE.md)，设计说明见 [docs/DESIGN.md](docs/DESIGN.md)。
+
+## 安装
+
+尚未发布到 npm。可以从 [Releases](https://github.com/GeoVerseLabs/geoverse-precise/releases) 下载预编译的 npm 包后安装：
+
+```bash
+npm install ./geoverse-precise-X.Y.Z.tgz
+# 或直接引用 Release 附件地址
+npm install https://github.com/GeoVerseLabs/geoverse-precise/releases/download/vX.Y.Z/geoverse-precise-X.Y.Z.tgz
+```
+
+也可以从源码构建（见下文「构建」）。每次 CI 运行也会产出 npm 包，在对应 Actions 运行页的 Artifacts 中下载。
 
 ## 快速开始
 
@@ -126,6 +144,8 @@ packages/geoverse-precise  TypeScript 封装（npm 包）
 examples/web-demo    MapLibre 对比页：turf 与 geoverse-precise 缓冲区叠加显示，可切换高德底图
 bench                精度 / 速度对比脚本、turf 逐函数对照脚本、剖析脚本与基准数据
 docs                 设计说明、精度报告、性能剖析、turf 覆盖对照表
+scripts              build-wasm.sh（cargo → wasm-bindgen → wasm-opt）
+.github              CI / Release 工作流、Dependabot、Issue 与 PR 模板
 ```
 
 ## 构建
@@ -134,7 +154,7 @@ docs                 设计说明、精度报告、性能剖析、turf 覆盖对
 
 ```bash
 rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli --version 0.2.128
+cargo install wasm-bindgen-cli --version 0.2.128 --locked
 
 cargo test -p geoverse-precise-core          # Rust 单测 + GeographicLib / PROJ 对照
 ./scripts/build-wasm.sh                # 生成 packages/geoverse-precise/wasm
@@ -159,24 +179,23 @@ cd bench && node turf-parity.mjs
 
 ## 版本管理
 
+- 仓库：<https://github.com/GeoVerseLabs/geoverse-precise>，`main` 保持可构建、CI 全绿；功能在 `feat/<名称>`、修复在 `fix/<名称>` 上开发，经 PR 合入。
 - 版本号以 `Cargo.toml`（`[workspace.package] version`）与 `packages/geoverse-precise/package.json` 为准，两处保持一致；
-  发布时打附注 tag `vX.Y.Z`，变更记录写进 [CHANGELOG.md](CHANGELOG.md)。
-  文档里的 v1 / v1.1 / v1.2 是历史里程碑名称，对应 0.1.0 / 0.2.0 / 0.3.0。
-- 分支：`main` 保持可构建、测试全绿；新功能在 `feat/<名称>`、修复在 `fix/<名称>` 上开发后合入。
-- 提交信息采用 `类型: 说明` 格式（`feat` / `fix` / `perf` / `docs` / `test` / `refactor` / `style` / `chore`）。
-- **构建产物不入库**：`packages/geoverse-precise/dist/`、`packages/geoverse-precise/wasm/`、`examples/web-demo/dist/`
-  都由源码生成（见上文「构建」）；v0.3.0 的预编译产物保存在交付包 `geoprecise-v0.3.0_1.zip` 中。
-- 提交前检查：
-
-  ```bash
-  cargo fmt --all -- --check
-  cargo clippy --workspace
-  cargo test -p geoverse-precise-core
-  cd packages/geoverse-precise && npm run build && npm test
-  ```
-
+  变更记录写进 [CHANGELOG.md](CHANGELOG.md)。文档里的 v1 / v1.1 / v1.2 是历史里程碑名称，对应 0.1.0 / 0.2.0 / 0.3.0。
+- 发布：推送附注标签 `vX.Y.Z` 后，Release 工作流自动编译、测试并创建 GitHub Release（附 npm 包）。完整步骤见 [CONTRIBUTING.md](CONTRIBUTING.md#发布)。
+- **构建产物不入库**：`packages/geoverse-precise/dist/`、`packages/geoverse-precise/wasm/`、`examples/web-demo/dist/` 都由源码生成；
+  预编译包从 Releases 或 CI Artifacts 获取。（更名前的 v0.3.0 预编译产物保存在原交付包 `geoprecise-v0.3.0_1.zip` 中。）
+- 提交信息、分支约定与提交前检查见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 - 纯格式化提交登记在 `.git-blame-ignore-revs`，执行一次 `git config blame.ignoreRevsFile .git-blame-ignore-revs` 即可让 `git blame` 跳过它们。
+
+## 参与与反馈
+
+- 开发流程与代码约定：[CONTRIBUTING.md](CONTRIBUTING.md)
+- 缺陷、精度问题与功能建议：[Issues](https://github.com/GeoVerseLabs/geoverse-precise/issues)（精度问题请使用「精度问题」模板，附参考值来源）
+- 安全问题：见 [SECURITY.md](SECURITY.md)，请勿公开发 issue
 
 ## 许可
 
-MIT OR Apache-2.0
+双许可，任选其一：[MIT](LICENSE-MIT) 或 [Apache-2.0](LICENSE-APACHE)。
+
+除非另行声明，你有意提交给本项目的贡献均按上述双许可授权，不附加其他条款。
