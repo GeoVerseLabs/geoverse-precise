@@ -17,6 +17,8 @@ env:
   CARGO_TERM_COLOR: always
   # 必须与 crates/wasm/Cargo.toml 中锁定的 wasm-bindgen 版本一致
   WASM_BINDGEN_VERSION: 0.2.128
+  # clippy 门禁使用的工具链（本地已验证 -D warnings 通过的版本）
+  CLIPPY_TOOLCHAIN: 1.97.0
 
 jobs:
   rust:
@@ -24,8 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      # clippy 门禁固定工具链版本：新版 clippy 增加的 lint 不会让 CI 突然变红，
+      # 升级在下方 clippy-latest 任务中先以警告形式暴露，再手动调整 CLIPPY_TOOLCHAIN。
+      - uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: ${{ env.CLIPPY_TOOLCHAIN }}
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
       - name: cargo fmt
@@ -34,6 +39,24 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: cargo test（含 GeographicLib / PROJ 对照）
         run: cargo test -p geoverse-precise-core --release
+
+  clippy-latest:
+    name: clippy（最新 stable，仅提示）
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo clippy（警告转为注释）
+        run: |
+          echo "::notice::$(rustc --version)"
+          cargo clippy --workspace --all-targets --message-format=short 2>&1 | tee clippy.txt
+          grep -E '^[^ ]+\.rs:[0-9]+:[0-9]+: (warning|error)' clippy.txt \
+            | sed -E 's/^([^:]+):([0-9]+):([0-9]+): (warning|error)(\[[^]]*\])?: (.*)$/::warning file=\1,line=\2,col=\3::\4: \6/' \
+            || true
 
   wasm:
     name: WASM + TypeScript 包
