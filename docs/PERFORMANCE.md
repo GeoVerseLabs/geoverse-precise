@@ -2,7 +2,7 @@
 
 本文记录 v1.0 的性能瓶颈是怎么测出来的、v1.1 做了哪些优化、效果如何，以及还剩哪些可做的事。
 
-- 复现：`cargo run --release -p geoprecise-core --example profile`（核心层）、`node bench/profile.mjs`（JS ↔ WASM 层）
+- 复现：`cargo run --release -p geoverse-precise-core --example profile`（核心层）、`node bench/profile.mjs`（JS ↔ WASM 层）
 - 环境：Node 22，wasm32 release（wasm-opt -O3），同一台机器，数值为多次运行平均
 
 ---
@@ -119,7 +119,7 @@ Krüger 六阶级数原来逐项调用 `sin/cos/sinh/cosh`（每次 24 个超越
    下一步：给 `Prepared` 补上 `area()` / `length()` / `buffer()` 等方法复用已解析几何；再进一步可以引入二进制几何通道（坐标走 `Float64Array` + 结构描述），跳过 JSON。
 2. **单次大地线反算 0.85 µs 是测量密集场景的地板**。可以提供 `precision: 'fast'` 选项，在几十公里内用局部曲率半径的解析解（毫米级误差、约 0.1 µs），把批量距离再快 5～8 倍。
 3. **缓冲区构件生成**是大范围缓冲的主要耗时（planar 边约占 70%）。可以改成 JTS 式"单条原始偏移环 + 非零环绕"，把合并阶段的轮廓数从上千降到个位数；预估整体再快 2～3 倍，但需要重新验证退化情形。
-4. **体积**：当前 wasm 1.34 MB（gzip 498 KB）。按函数名归类的构成：Rust 核心/格式化 32%、geoprecise 自身 20%、i_overlay 11%、geo 算法 8%、GeoJSON 解析 7%、serde_json 4.5%、DE-9IM 4%、rstar 4%。
+4. **体积**：当前 wasm 1.34 MB（gzip 498 KB）。按函数名归类的构成：Rust 核心/格式化 32%、geoverse-precise 自身 20%、i_overlay 11%、geo 算法 8%、GeoJSON 解析 7%、serde_json 4.5%、DE-9IM 4%、rstar 4%。
    可做：给 `relate` / 凹包 / 拓扑检查加 cargo feature 开关，按需构建；用 `panic_immediate_abort` 构建（可再省 20%～30%，需 nightly）；或把 wasm 放到 Worker 里懒加载。
 5. **多线程**：批量接口天然可并行，wasm threads（SharedArrayBuffer + rayon）在有 COOP/COEP 头的站点可以再快 3～4 倍。
 6. **Web Worker 封装**：大范围缓冲、叠加、拓扑检查都是几十毫秒级，放进 Worker 可以避免卡住主线程交互。

@@ -2,8 +2,8 @@
 //! Regenerate with `python bench/gen_fixtures.py`.
 
 use geo::{Coord, LineString};
-use geoprecise_core::crs::{Crs, Transformer};
-use geoprecise_core::{geodesic, measure};
+use geoverse_precise_core::crs::{Crs, Transformer};
+use geoverse_precise_core::{geodesic, measure};
 use serde_json::Value;
 
 fn load(name: &str) -> Vec<Value> {

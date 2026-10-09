@@ -2,7 +2,7 @@
 
 For every buffer vertex written to bench/out/buffers.json, recompute its
 distance to the input geometry with pyproj.Geod (PROJ's GeographicLib port)
-and compare with the value geoprecise reported.
+and compare with the value geoverse-precise reported.
 
     python bench/verify_buffer.py
 """
@@ -82,4 +82,4 @@ for name, s in data.items():
         worst_overall = max(worst_overall, disagreement)
         print(f"{name:45s} {method:10s} max|err| (pyproj) = {np.abs(err_true).max():12.6f} m   "
               f"stick disagreement = {disagreement:.2e} m")
-print(f"\nmax disagreement between geoprecise stick and pyproj: {worst_overall:.2e} m")
+print(f"\nmax disagreement between geoverse-precise stick and pyproj: {worst_overall:.2e} m")

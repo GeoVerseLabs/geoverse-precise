@@ -1,12 +1,12 @@
 // Behavioural comparison against turf.js, function by function.
 //
-//   cd packages/geoprecise && npm run build && cd ../../bench && node turf-parity.mjs
+//   cd packages/geoverse-precise && npm run build && cd ../../bench && node turf-parity.mjs
 //
-// For each function it reports whether geoprecise agrees with turf, and where it
+// For each function it reports whether geoverse-precise agrees with turf, and where it
 // deliberately does not, why. Writes bench/out/parity.json.
 import { writeFileSync, mkdirSync } from 'node:fs';
 import * as turf from '@turf/turf';
-import * as gp from '../packages/geoprecise/dist/index.js';
+import * as gp from '../packages/geoverse-precise/dist/index.js';
 
 await gp.init();
 mkdirSync(new URL('out/', import.meta.url), { recursive: true });
@@ -150,7 +150,7 @@ const fmtPct = (v) => `${(v * 100).toFixed(4)}%`;
   row(
     'squareGrid',
     'better',
-    `turf cell areas vary by ${fmtPct(spread(cellAreas(ts)))} of nominal, geoprecise by ${fmtPct(spread(cellAreas(gs)))}`,
+    `turf cell areas vary by ${fmtPct(spread(cellAreas(ts)))} of nominal, geoverse-precise by ${fmtPct(spread(cellAreas(gs)))}`,
   );
   const th = turf.hexGrid(b, 5, { units: 'kilometers' });
   const gh = gp.hexGrid(b, 5);
@@ -264,7 +264,7 @@ const fmtPct = (v) => `${(v * 100).toFixed(4)}%`;
 
   const tk = turf.clustersKmeans(turf.clone(fc), { numberOfClusters: 2 });
   const gk = gp.clustersKmeans(fc, { numberOfClusters: 2 });
-  row('clustersKmeans', 'better', `${count(tk)}/${count(gk)} clusters; geoprecise seeds deterministically, so the result repeats`);
+  row('clustersKmeans', 'better', `${count(tk)}/${count(gk)} clusters; geoverse-precise seeds deterministically, so the result repeats`);
 
   const knots = turf.featureCollection([...blob(116, 39, 24), ...blob(116.2, 39.2, 24)].map((c) => turf.point(c)));
   const tn = turf.nearestNeighborAnalysis(knots).properties.nearestNeighborAnalysis;
@@ -306,7 +306,7 @@ const fmtPct = (v) => `${(v * 100).toFixed(4)}%`;
   row(
     'shortestPath',
     'better',
-    `turf ${gp.length(tp).toFixed(2)} km vs ${gp.length(gpp).toFixed(2)} km (straight line ${direct.toFixed(2)} km); geoprecise pulls the staircase taut`,
+    `turf ${gp.length(tp).toFixed(2)} km vs ${gp.length(gpp).toFixed(2)} km (straight line ${direct.toFixed(2)} km); geoverse-precise pulls the staircase taut`,
   );
   const clear = gp.shortestPath(start, end, { resolution: 1.5, padding: 6 });
   row('shortestPath (clear)', 'better', `${gp.length(clear).toFixed(4)} km vs the straight line ${direct.toFixed(4)} km`);

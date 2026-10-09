@@ -1,5 +1,5 @@
 /**
- * geoprecise — ellipsoid-accurate spatial analysis (Rust → WebAssembly).
+ * geoverse-precise — ellipsoid-accurate spatial analysis (Rust → WebAssembly).
  *
  * API mirrors turf.js where possible:
  *  - lengths default to kilometers, areas are m²
@@ -9,7 +9,7 @@
  * converted to WGS84, computed on the WGS84 ellipsoid, and results are
  * converted back to the same CRS.
  */
-import initWasm, * as wasm from '../wasm/geoprecise_wasm.js';
+import initWasm, * as wasm from '../wasm/geoverse_precise_wasm.js';
 import type {
   Feature,
   FeatureCollection,
@@ -122,7 +122,7 @@ export function init(input?: InitInput): Promise<void> {
         const fs = (await import(/* @vite-ignore */ /* webpackIgnore: true */ fsName)) as {
           readFile(p: URL): Promise<Uint8Array>;
         };
-        source = { module_or_path: await fs.readFile(new URL('../wasm/geoprecise_wasm_bg.wasm', import.meta.url)) };
+        source = { module_or_path: await fs.readFile(new URL('../wasm/geoverse_precise_wasm_bg.wasm', import.meta.url)) };
       }
       await initWasm(source);
       initialized = true;
@@ -143,11 +143,11 @@ export function isReady(): boolean {
 }
 
 function ensure(): void {
-  if (!initialized) throw new Error('geoprecise: call `await init()` before using the library');
+  if (!initialized) throw new Error('geoverse-precise: call `await init()` before using the library');
 }
 
 // The pure-TypeScript helper layer (constructors, iteration, unit conversion)
-// lives in its own module and is re-exported from here, so `geoprecise` is a
+// lives in its own module and is re-exported from here, so `geoverse-precise` is a
 // single import the way `@turf/turf` is.
 export * from './helpers.js';
 import {
@@ -539,7 +539,7 @@ export class Prepared {
   }
 
   private get h(): InstanceType<typeof wasm.PreparedGeometry> {
-    if (!this.handle) throw new Error('geoprecise: this Prepared geometry has been freed');
+    if (!this.handle) throw new Error('geoverse-precise: this Prepared geometry has been freed');
     return this.handle;
   }
 
@@ -1038,8 +1038,8 @@ export interface MakeValidOptions extends CrsOption {
   cleanTolerance?: number;
 }
 
-/** Repair geometries; the result carries a `geoprecise:fixes` list. */
-export function makeValid<T extends GeoJSON>(geojson: T, options: MakeValidOptions = {}): T & { 'geoprecise:fixes': string[] } {
+/** Repair geometries; the result carries a `geoverse-precise:fixes` list. */
+export function makeValid<T extends GeoJSON>(geojson: T, options: MakeValidOptions = {}): T & { 'geoverse-precise:fixes': string[] } {
   ensure();
   return JSON.parse(wasm.makeValid(js(geojson), opts(options)));
 }
@@ -1102,13 +1102,13 @@ export function snapRound<T extends GeoJSON>(geojson: T, grid: number, options: 
   return JSON.parse(wasm.snapRound(js(geojson), grid, opts({ units: options.units ?? 'meters', ...options })));
 }
 
-/** Snap vertices onto a reference layer; result carries `geoprecise:moved`. */
+/** Snap vertices onto a reference layer; result carries `geoverse-precise:moved`. */
 export function snapTo<T extends GeoJSON>(
   geojson: T,
   reference: GeoJSON,
   tolerance: number,
   options: UnitsOption & CrsOption = {},
-): T & { 'geoprecise:moved': number } {
+): T & { 'geoverse-precise:moved': number } {
   ensure();
   return JSON.parse(
     wasm.snapTo(js(geojson), js(reference), tolerance, opts({ units: options.units ?? 'meters', ...options })),

@@ -1,4 +1,4 @@
-# geoprecise
+# geoverse-precise
 
 Rust 编写、编译为 WebAssembly 的**椭球精度**客户端空间分析库，API 与 turf.js 对齐，用来替换 turf 中会产生失真、偏移的计算。
 
@@ -21,7 +21,7 @@ Rust 编写、编译为 WebAssembly 的**椭球精度**客户端空间分析库�
 ## 快速开始
 
 ```ts
-import * as gp from 'geoprecise';
+import * as gp from 'geoverse-precise';
 await gp.init();
 
 gp.distance([116.397, 39.909], [121.474, 31.230]);            // 1066.78 km（椭球）
@@ -46,7 +46,7 @@ zone.free();
 
 ```ts
 gp.validate(geojson);                                // { valid, issues[] }
-gp.makeValid(geojson);                               // 修复后的要素 + geoprecise:fixes
+gp.makeValid(geojson);                               // 修复后的要素 + geoverse-precise:fixes
 gp.coverageIssues(parcels, { gapTolerance: 0.5 });   // 面之间的重叠与缝隙
 gp.networkIssues(roads, { tolerance: 0.05, maxUndershoot: 2 });  // 悬挂线、伪节点、欠头
 ```
@@ -66,12 +66,12 @@ gp.shortestPath(a, b, { obstacles, resolution: 1 }); // 绕障并拉紧
 turf 的纯 JS 助手层（构造器、遍历、单位换算、`geojsonRbush`）也一并提供，且不需要 `init()`：
 
 ```ts
-import { point, coordEach, convertLength, geojsonRbush } from 'geoprecise';
+import { point, coordEach, convertLength, geojsonRbush } from 'geoverse-precise';
 ```
 
 从 turf 迁移：函数名、参数顺序、默认单位（kilometers）、返回的 GeoJSON 形态都与 turf 一致。差异只有：
 
-| 项 | turf | geoprecise |
+| 项 | turf | geoverse-precise |
 |---|---|---|
 | 初始化 | 无 | `await init()` 一次 |
 | 地球模型 | 球（R = 6371008.8 m） | WGS84 椭球 |
@@ -122,8 +122,8 @@ import { point, coordEach, convertLength, geojsonRbush } from 'geoprecise';
 ```
 crates/core          纯 Rust 核心（可脱离 WASM 使用）
 crates/wasm          wasm-bindgen 导出层
-packages/geoprecise  TypeScript 封装（npm 包）
-examples/web-demo    MapLibre 对比页：turf 与 geoprecise 缓冲区叠加显示，可切换高德底图
+packages/geoverse-precise  TypeScript 封装（npm 包）
+examples/web-demo    MapLibre 对比页：turf 与 geoverse-precise 缓冲区叠加显示，可切换高德底图
 bench                精度 / 速度对比脚本、turf 逐函数对照脚本、剖析脚本与基准数据
 docs                 设计说明、精度报告、性能剖析、turf 覆盖对照表
 ```
@@ -136,9 +136,9 @@ docs                 设计说明、精度报告、性能剖析、turf 覆盖对
 rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli --version 0.2.128
 
-cargo test -p geoprecise-core          # Rust 单测 + GeographicLib / PROJ 对照
-./scripts/build-wasm.sh                # 生成 packages/geoprecise/wasm
-cd packages/geoprecise && npm install && npm run build && npm test
+cargo test -p geoverse-precise-core          # Rust 单测 + GeographicLib / PROJ 对照
+./scripts/build-wasm.sh                # 生成 packages/geoverse-precise/wasm
+cd packages/geoverse-precise && npm install && npm run build && npm test
 
 cd ../../examples/web-demo && npm install && npm run dev   # 对比演示页
 ```
@@ -159,20 +159,20 @@ cd bench && node turf-parity.mjs
 
 ## 版本管理
 
-- 版本号以 `Cargo.toml`（`[workspace.package] version`）与 `packages/geoprecise/package.json` 为准，两处保持一致；
+- 版本号以 `Cargo.toml`（`[workspace.package] version`）与 `packages/geoverse-precise/package.json` 为准，两处保持一致；
   发布时打附注 tag `vX.Y.Z`，变更记录写进 [CHANGELOG.md](CHANGELOG.md)。
   文档里的 v1 / v1.1 / v1.2 是历史里程碑名称，对应 0.1.0 / 0.2.0 / 0.3.0。
 - 分支：`main` 保持可构建、测试全绿；新功能在 `feat/<名称>`、修复在 `fix/<名称>` 上开发后合入。
 - 提交信息采用 `类型: 说明` 格式（`feat` / `fix` / `perf` / `docs` / `test` / `refactor` / `style` / `chore`）。
-- **构建产物不入库**：`packages/geoprecise/dist/`、`packages/geoprecise/wasm/`、`examples/web-demo/dist/`
+- **构建产物不入库**：`packages/geoverse-precise/dist/`、`packages/geoverse-precise/wasm/`、`examples/web-demo/dist/`
   都由源码生成（见上文「构建」）；v0.3.0 的预编译产物保存在交付包 `geoprecise-v0.3.0_1.zip` 中。
 - 提交前检查：
 
   ```bash
   cargo fmt --all -- --check
   cargo clippy --workspace
-  cargo test -p geoprecise-core
-  cd packages/geoprecise && npm run build && npm test
+  cargo test -p geoverse-precise-core
+  cd packages/geoverse-precise && npm run build && npm test
   ```
 
 - 纯格式化提交登记在 `.git-blame-ignore-revs`，执行一次 `git config blame.ignoreRevsFile .git-blame-ignore-revs` 即可让 `git blame` 跳过它们。

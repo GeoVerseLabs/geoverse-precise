@@ -1,7 +1,7 @@
 //! Edge interpretation and adaptive densification.
 //!
 //! GeoJSON (RFC 7946 §3.1.1) defines an edge as a straight line in lon/lat,
-//! which is also what turf assumes. Internally geoprecise works with geodesic
+//! which is also what turf assumes. Internally geoverse-precise works with geodesic
 //! segments, so a `Planar` edge is first split (only where needed) until the
 //! geodesic between consecutive vertices stays within `tol` metres of the
 //! lon/lat straight line.

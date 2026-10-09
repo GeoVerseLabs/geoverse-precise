@@ -1,7 +1,7 @@
 // JS ↔ WASM boundary cost breakdown.
 import { readFileSync } from 'node:fs';
-import * as gp from '../packages/geoprecise/dist/index.js';
-import * as wasm from '../packages/geoprecise/wasm/geoprecise_wasm.js';
+import * as gp from '../packages/geoverse-precise/dist/index.js';
+import * as wasm from '../packages/geoverse-precise/wasm/geoverse_precise_wasm.js';
 
 await gp.init();
 const bench = (name, reps, fn) => {

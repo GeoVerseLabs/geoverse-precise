@@ -1,17 +1,17 @@
-//! WebAssembly bindings for geoprecise-core.
+//! WebAssembly bindings for geoverse-precise-core.
 //!
 //! Geometries cross the boundary as JSON strings (faster than per-value
 //! marshalling for large coordinate arrays); the TypeScript wrapper in
-//! `packages/geoprecise` handles stringify / parse and argument normalisation.
+//! `packages/geoverse-precise` handles stringify / parse and argument normalisation.
 
-use geoprecise_core::api;
-use geoprecise_core::api_ext as ext;
-use geoprecise_core::overlay::OverlayOp;
+use geoverse_precise_core::api;
+use geoverse_precise_core::api_ext as ext;
+use geoverse_precise_core::overlay::OverlayOp;
 use wasm_bindgen::prelude::*;
 
 type R<T> = Result<T, JsError>;
 
-fn e(err: geoprecise_core::Error) -> JsError {
+fn e(err: geoverse_precise_core::Error) -> JsError {
     JsError::new(&err.to_string())
 }
 
@@ -166,7 +166,7 @@ pub fn destination_batch(rows: &[f64], units: &str, crs: &str) -> R<Vec<f64>> {
 /// Call `free()` when done — the geometry lives in WASM memory.
 #[wasm_bindgen]
 pub struct PreparedGeometry {
-    inner: geoprecise_core::index::PreparedInCrs,
+    inner: geoverse_precise_core::index::PreparedInCrs,
     units: f64,
 }
 
@@ -175,19 +175,21 @@ impl PreparedGeometry {
     #[wasm_bindgen(constructor)]
     pub fn new(geojson: &str, crs: &str, units: &str) -> R<PreparedGeometry> {
         let c = api::crs(crs).map_err(e)?;
-        let mut gj = geoprecise_core::geojson_util::parse(geojson).map_err(e)?;
-        geoprecise_core::geojson_util::transform(&mut gj, &c, &geoprecise_core::crs::Crs::Wgs84);
-        let geoms = geoprecise_core::geojson_util::geometries(&gj).map_err(e)?;
+        let mut gj = geoverse_precise_core::geojson_util::parse(geojson).map_err(e)?;
+        geoverse_precise_core::geojson_util::transform(&mut gj, &c, &geoverse_precise_core::crs::Crs::Wgs84);
+        let geoms = geoverse_precise_core::geojson_util::geometries(&gj).map_err(e)?;
         let geometry = match geoms.len() {
             0 => return Err(JsError::new("no geometry")),
             1 => geoms.into_iter().next().unwrap(),
-            _ => geoprecise_core::geo::Geometry::GeometryCollection(geoprecise_core::geo::GeometryCollection(geoms)),
+            _ => geoverse_precise_core::geo::Geometry::GeometryCollection(
+                geoverse_precise_core::geo::GeometryCollection(geoms),
+            ),
         };
-        let units = geoprecise_core::units::Units::parse(units)
+        let units = geoverse_precise_core::units::Units::parse(units)
             .map_err(e)?
             .meters_per_unit();
         Ok(PreparedGeometry {
-            inner: geoprecise_core::index::PreparedInCrs::new(geometry, &c).map_err(e)?,
+            inner: geoverse_precise_core::index::PreparedInCrs::new(geometry, &c).map_err(e)?,
             units,
         })
     }

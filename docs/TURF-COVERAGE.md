@@ -1,8 +1,8 @@
 # turf coverage
 
 Every one of the **184 exports of `@turf/turf` 7.2** has a same-named export in
-`geoprecise`, so `import * as turf from '@turf/turf'` becomes
-`import * as turf from 'geoprecise'` — with one call to `await turf.init()` at
+`geoverse-precise`, so `import * as turf from '@turf/turf'` becomes
+`import * as turf from 'geoverse-precise'` — with one call to `await turf.init()` at
 start-up, because the geometry runs in WebAssembly.
 
 The status column comes from `bench/turf-parity.mjs`, which runs both libraries
@@ -20,9 +20,9 @@ side by side and prints the numbers quoted here:
 
 ## Measurement
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
-| `distance` | `distance` | + | Karney geodesic. Beijing→Shanghai: turf 1 067 078.9 m, geoprecise 1 065 615.5 m — turf is 0.137% long |
+| `distance` | `distance` | + | Karney geodesic. Beijing→Shanghai: turf 1 067 078.9 m, geoverse-precise 1 065 615.5 m — turf is 0.137% long |
 | `bearing` | `bearing` | + | ellipsoidal azimuth; 0.0985° from turf's spherical one on the same pair |
 | `destination` | `destination` | + | 1 022 m apart from turf after 500 km |
 | `midpoint` | `midpoint` | + | 194 m apart from turf on a 1 000 km line |
@@ -40,7 +40,7 @@ side by side and prints the numbers quoted here:
 
 ## Coordinate mutation and transforms
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `transformRotate` | `transformRotate` | + | rotates on the ellipsoid rather than in degree space |
 | `transformTranslate` | `transformTranslate` | + | same |
@@ -61,13 +61,13 @@ input is converted in, computed on the ellipsoid, and converted back out.
 
 ## Constructive
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
-| `circle` | `circle` | + | every vertex exactly on the radius: turf's radii spread 39.7 m over a 10 km circle, geoprecise's 0.000 m |
-| `buffer` | `buffer` | + | geodesic offset strips and wedges: turf's edge distance spreads 200 m at 50 km, geoprecise's 0.00 m |
+| `circle` | `circle` | + | every vertex exactly on the radius: turf's radii spread 39.7 m over a 10 km circle, geoverse-precise's 0.000 m |
+| `buffer` | `buffer` | + | geodesic offset strips and wedges: turf's edge distance spreads 200 m at 50 km, geoverse-precise's 0.00 m |
 | `ellipse` | `ellipse` | + | metric semi-axes: turf draws 20 050 m for a 20 km axis |
 | `sector` | `sector` | + | radii exact |
-| `lineArc` | `lineArc` | + | turf's radii spread 19.8 m, geoprecise's 0.0000 m |
+| `lineArc` | `lineArc` | + | turf's radii spread 19.8 m, geoverse-precise's 0.0000 m |
 | `bezierSpline` | `bezierSpline` | = | Catmull-Rom control points, evaluated in the local plane |
 | `polygonSmooth` | `polygonSmooth` | + | Chaikin cutting in metres, so cells do not skew with latitude |
 | `polygonTangents` | `polygonTangents` | = | |
@@ -85,21 +85,21 @@ input is converted in, computed on the ellipsoid, and converted back out.
 ## Grids
 
 turf converts a cell size to degrees once and uses it for both axes, so its cells
-stretch east-west as you leave the equator. geoprecise lays the grid out in a
+stretch east-west as you leave the equator. geoverse-precise lays the grid out in a
 local transverse Mercator plane, so a 5 km cell is 5 km on the ground.
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
-| `pointGrid` | `pointGrid` | + | 5 km grid at 39°N: turf spaces neighbours 4 992 m, geoprecise 5 000 m |
-| `squareGrid` | `squareGrid` | + | cell areas vary by 0.146% of nominal for turf, 0.0005% for geoprecise |
-| `rectangleGrid` | `rectangleGrid` | + | turf's median cell is 0.777× the requested area; geoprecise's is 1.000× |
+| `pointGrid` | `pointGrid` | + | 5 km grid at 39°N: turf spaces neighbours 4 992 m, geoverse-precise 5 000 m |
+| `squareGrid` | `squareGrid` | + | cell areas vary by 0.146% of nominal for turf, 0.0005% for geoverse-precise |
+| `rectangleGrid` | `rectangleGrid` | + | turf's median cell is 0.777× the requested area; geoverse-precise's is 1.000× |
 | `triangleGrid` | `triangleGrid` | + | both 1.000× nominal; the cell counts differ because the cells are different sizes |
-| `hexGrid` | `hexGrid` | + | flat-top hexagons; turf 1.001× nominal, geoprecise 1.000× |
-| `interpolate` | `interpolate` | + | IDW with a geodesic search radius. On a 0.02°-tall bbox turf's degree-converted cells are taller than the box and it returns nothing; geoprecise returns 18 cells |
+| `hexGrid` | `hexGrid` | + | flat-top hexagons; turf 1.001× nominal, geoverse-precise 1.000× |
+| `interpolate` | `interpolate` | + | IDW with a geodesic search radius. On a 0.02°-tall bbox turf's degree-converted cells are taller than the box and it returns nothing; geoverse-precise returns 18 cells |
 
 ## Interpolation and contouring
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `isolines` | `isolines` | = | traced across lattice triangles, where the interpolant is linear — no marching-squares saddle to guess at. Contour positions agree with the level to 1.4e-13° |
 | `isobands` | `isobands` | + | bands are built by clipping triangles and unioning, so they tile the domain with no slivers or overlaps |
@@ -109,7 +109,7 @@ local transverse Mercator plane, so a 5 km cell is 5 km on the ground.
 
 ## Overlay
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `intersect` | `intersect` | = | integer-kernel boolean (`i_overlay` via `geo`); areas differ only by turf's spherical area |
 | `union` | `union` | = | same |
@@ -121,7 +121,7 @@ lon/lat-straight lines; `planar` (the default) is RFC 7946 and turf semantics.
 
 ## Predicates
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `booleanPointInPolygon` | `booleanPointInPolygon` | = | |
 | `booleanIntersects` | `booleanIntersects` | = | |
@@ -144,7 +144,7 @@ pattern such as `T*F**FFF*`, `booleanRelation` takes the predicate by name, and
 
 ## Lines
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `lineSegment` | `lineSegment` | = | two-position LineStrings |
 | `lineSplit` | `lineSplit` | = | |
@@ -152,7 +152,7 @@ pattern such as `T*F**FFF*`, `booleanRelation` takes the predicate by name, and
 | `lineSliceAlong` | `lineSliceAlong` | + | same |
 | `lineChunk` | `lineChunk` | + | chunk length is a real distance |
 | `lineIntersect` | `lineIntersect` | = | |
-| `lineOffset` | `lineOffset` | + | 1 km offset: turf lands at 999 m, geoprecise at 1 000 m. Convex corners get an arc; concave corners keep both perpendicular feet, so they sit at `d·cos(turn)` rather than folding over |
+| `lineOffset` | `lineOffset` | + | 1 km offset: turf lands at 999 m, geoverse-precise at 1 000 m. Convex corners get an arc; concave corners keep both perpendicular feet, so they sit at `d·cos(turn)` rather than folding over |
 | `lineOverlap` | `lineOverlap` | = | tolerance is metric |
 | `nearestPointToLine` | `nearestPointToLine` | = | |
 | `nearestPoint` | `nearestPoint` | + | geodesic distances |
@@ -165,7 +165,7 @@ pattern such as `T*F**FFF*`, `booleanRelation` takes the predicate by name, and
 
 ## Centres
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `center` | `center` | = | bbox centre; identical |
 | `centroid` | `centroid` | = | mean of positions, with the ring's closing position excluded as turf does |
@@ -176,7 +176,7 @@ pattern such as `T*F**FFF*`, `booleanRelation` takes the predicate by name, and
 
 ## Clustering and spatial statistics
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `clustersDbscan` | `clustersDbscan` | = | 2/2 clusters and 1/1 noise point on the same input; `maxDistance` is geodesic |
 | `clustersKmeans` | `clustersKmeans` | + | k-means++ from a fixed generator, so repeated runs give the same clusters; turf's `skmeans` seeds at random |
@@ -184,22 +184,22 @@ pattern such as `T*F**FFF*`, `booleanRelation` takes the predicate by name, and
 | `clusterEach` | `clusterEach` | = | |
 | `clusterReduce` | `clusterReduce` | = | |
 | `createBins` | `createBins` | = | |
-| `nearestNeighborAnalysis` | `nearestNeighborAnalysis` | + | for two 24-point rings the closed form gives an index of 0.3362; geoprecise reports 0.3375 and turf 0.0877 |
+| `nearestNeighborAnalysis` | `nearestNeighborAnalysis` | + | for two 24-point rings the closed form gives an index of 0.3362; geoverse-precise reports 0.3375 and turf 0.0877 |
 | `standardDeviationalEllipse` | `standardDeviationalEllipse` | + | fitted in metres: 20.34 km × 0.51 km where turf reports 0.0052° × 0.2001°, which mixes the two axes' units. Also reports `majorAxisBearing`, which θ alone does not give |
 | `directionalMean` | `directionalMean` | = | geodesic start-to-end azimuths; 45.000° against turf's 45.115° |
 | `distanceWeight` | `distanceWeight` | + | the radius is a geodesic distance in `units`. turf thresholds a Minkowski distance on raw degrees: on a 1 km lattice at 39°N its interior point sees 63 neighbours at `threshold: 1.2` and 2 at `0.0095`, where a 1.2 km radius sees the 4 that are there |
 | `moranIndex` | `moranIndex` | + | follows from the weights: a west-to-east ramp on a rook lattice gives 0.9375, where turf gives −0.0159 (its expectation) or 1.0000 depending on which degree threshold you pick |
-| `quadratAnalysis` | `quadratAnalysis` | + | equal-area quadrats. On a perfect lattice turf's degree quadrats give uneven counts and reject randomness; geoprecise counts 4 per quadrat, so χ² is 0 and `varianceMeanRatio` of 0.00 is what reports the regularity. Note that χ² only tests the clustered tail — a regular pattern passes it too |
+| `quadratAnalysis` | `quadratAnalysis` | + | equal-area quadrats. On a perfect lattice turf's degree quadrats give uneven counts and reject randomness; geoverse-precise counts 4 per quadrat, so χ² is 0 and `varianceMeanRatio` of 0.00 is what reports the regularity. Note that χ² only tests the clustered tail — a regular pattern passes it too |
 
 ## Routing
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `shortestPath` | `shortestPath` | + | A* over a metric lattice, then pulled taut: 36.89 km around a wall where turf's staircase is 41.04 km (straight line 34.65 km). With nothing in the way the result is the straight line, to 0.1 m |
 
 ## Joins and aggregation
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `tag` | `tag` | = | |
 | `collect` | `collect` | = | |
@@ -211,7 +211,7 @@ pattern such as `T*F**FFF*`, `booleanRelation` takes the predicate by name, and
 
 These need no `init()` and are byte-compatible with turf's.
 
-| turf | geoprecise | | note |
+| turf | geoverse-precise | | note |
 | --- | --- | --- | --- |
 | `feature`, `featureCollection`, `geometry`, `geometryCollection` | same | = | |
 | `point`, `points`, `lineString`, `lineStrings`, `polygon`, `polygons` | same | = | rings are closed for you; the same validation errors |
@@ -236,7 +236,7 @@ These need no `init()` and are byte-compatible with turf's.
 | `geojsonRbush` | `geojsonRbush` | = | 4 vs 4 hits on the same query. A uniform grid behind turf's R-tree surface (`insert`, `load`, `remove`, `search`, `collides`, `all`, `clear`, `toJSON`, `fromJSON`) — same results, no dependency |
 | `meta`, `helpers`, `invariant`, `projection`, `random`, `clusters` | same | = | the namespace objects, for `meta.coordEach(…)` style calls |
 
-## Only in geoprecise
+## Only in geoverse-precise
 
 Nothing in turf corresponds to these.
 
@@ -269,7 +269,7 @@ boundary once.
 2. Lengths default to kilometres and areas are m², as in turf.
 3. `units` is accepted wherever turf accepts it, and additionally on grid cell
    sizes, tolerances, search radii and routing resolutions — those are metric in
-   geoprecise, where turf takes degrees.
+   geoverse-precise, where turf takes degrees.
 4. `edges` chooses how an edge between two vertices is interpreted: `planar`
    (the default, RFC 7946 and turf) or `geodesic`.
 5. `crs` is accepted throughout; leave it out for WGS84.

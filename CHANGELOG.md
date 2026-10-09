@@ -17,9 +17,26 @@
 
 ## [Unreleased]
 
+### ⚠ 不兼容变更：项目更名为 geoverse-precise
+仓库迁至 [GeoVerseLabs/geoverse-precise](https://github.com/GeoVerseLabs/geoverse-precise)，所有包名随之更改：
+
+| 项 | 0.3.0 及以前 | 现在 |
+|---|---|---|
+| npm 包 | `geoprecise` | `geoverse-precise` |
+| Rust crate | `geoprecise-core` / `geoprecise-wasm` | `geoverse-precise-core` / `geoverse-precise-wasm` |
+| Rust 路径 | `geoprecise_core::…` | `geoverse_precise_core::…` |
+| wasm 产物 | `geoprecise_wasm*.{js,wasm}` | `geoverse_precise_wasm*.{js,wasm}` |
+| 源码目录 | `packages/geoprecise` | `packages/geoverse-precise` |
+| `makeValid` 结果属性 | `geoprecise:fixes` | `geoverse-precise:fixes` |
+| `snapTo` 结果属性 | `geoprecise:moved` | `geoverse-precise:moved` |
+
+迁移：`import … from 'geoprecise'` 改为 `from 'geoverse-precise'`；读取上述两个结果属性的代码同步改键名。
+函数名、参数与计算结果均无变化。`bench/out/` 下的历史结果文件保留 0.3.0 运行时的原始键名。
+
 ### 变更
 - 全部 Rust 源码按 `rustfmt.toml` 统一格式化（纯格式，无逻辑改动；`cargo test` 结果不变）。
 - 新增本更新日志；README 增加「版本管理」一节。
+- Cargo 与 npm 清单补充 `repository` / `homepage` / `bugs` 等元数据。
 
 ### 计划（来自 DESIGN.md §8）
 - `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。

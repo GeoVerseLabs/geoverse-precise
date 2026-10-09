@@ -1009,7 +1009,7 @@ pub fn make_valid(geojson: &str, options: &str) -> Result<String> {
     })?;
     let mut doc: serde_json::Value = serde_json::from_str(&io.doc_out(out)?)?;
     if let Some(obj) = doc.as_object_mut() {
-        obj.insert("geoprecise:fixes".into(), serde_json::to_value(&fixes)?);
+        obj.insert("geoverse-precise:fixes".into(), serde_json::to_value(&fixes)?);
     }
     Ok(doc.to_string())
 }
@@ -1119,7 +1119,7 @@ pub fn snap_to(geojson: &str, reference: &str, tolerance: f64, options: &str) ->
     })?;
     let mut doc: serde_json::Value = serde_json::from_str(&io.doc_out(out)?)?;
     if let Some(obj) = doc.as_object_mut() {
-        obj.insert("geoprecise:moved".into(), moved.into());
+        obj.insert("geoverse-precise:moved".into(), moved.into());
     }
     Ok(doc.to_string())
 }

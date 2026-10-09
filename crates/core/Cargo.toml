@@ -1,10 +1,16 @@
 [package]
-name = "geoprecise-core"
+name = "geoverse-precise-core"
 description = "Ellipsoid-accurate spatial analysis: geodesic measurement, China CRS transforms, geodesic buffer & robust overlay"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+readme = "../../README.md"
+keywords = ["gis", "geodesic", "geospatial", "cgcs2000", "gcj02"]
+categories = ["science::geo", "mathematics"]
 
 [features]
 index-stats = []

@@ -1,5 +1,5 @@
 {
-  "name": "geoprecise-web-demo",
+  "name": "geoverse-precise-web-demo",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@turf/turf": "^7.2.0",
-    "geoprecise": "file:../../packages/geoprecise",
+    "geoverse-precise": "file:../../packages/geoverse-precise",
     "maplibre-gl": "^5.0.0"
   },
   "devDependencies": {

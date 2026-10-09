@@ -1,7 +1,16 @@
 {
-  "name": "geoprecise",
+  "name": "geoverse-precise",
   "version": "0.3.0",
   "description": "Ellipsoid-accurate spatial analysis in WebAssembly: geodesic measurement, China CRS (GCJ-02 / BD-09 / CGCS2000) transforms, geodesic buffers and robust overlay. turf-style API.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeoVerseLabs/geoverse-precise.git",
+    "directory": "packages/geoverse-precise"
+  },
+  "homepage": "https://github.com/GeoVerseLabs/geoverse-precise#readme",
+  "bugs": {
+    "url": "https://github.com/GeoVerseLabs/geoverse-precise/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,7 +31,16 @@
     "build": "tsc -p tsconfig.json",
     "test": "node --test test/*.test.mjs"
   },
-  "keywords": ["gis", "geodesic", "turf", "wasm", "gcj02", "bd09", "cgcs2000", "buffer"],
+  "keywords": [
+    "gis",
+    "geodesic",
+    "turf",
+    "wasm",
+    "gcj02",
+    "bd09",
+    "cgcs2000",
+    "buffer"
+  ],
   "license": "MIT OR Apache-2.0",
   "devDependencies": {
     "@types/geojson": "^7946.0.16",

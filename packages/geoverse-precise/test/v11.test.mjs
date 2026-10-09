@@ -241,7 +241,7 @@ test('validate finds the usual problems', () => {
 test('makeValid repairs and reports what it did', () => {
   const bowtie = feature({ type: 'Polygon', coordinates: [[[0, 0], [2, 2], [2, 0], [0, 2], [0, 0]]] }, { id: 7 });
   const fixed = gp.makeValid(bowtie);
-  assert.ok(fixed['geoprecise:fixes'].length > 0);
+  assert.ok(fixed['geoverse-precise:fixes'].length > 0);
   assert.equal(fixed.properties.id, 7);
   assert.equal(gp.validate(fixed).valid, true);
   assert.equal(fixed.geometry.type, 'MultiPolygon');
@@ -284,7 +284,7 @@ test('snapping', () => {
 
   const reference = { type: 'LineString', coordinates: [[120, 30], [120.01, 30]] };
   const moved = gp.snapTo(line, reference, 5);
-  assert.ok(moved['geoprecise:moved'] >= 1);
+  assert.ok(moved['geoverse-precise:moved'] >= 1);
   assert.deepEqual(moved.geometry.coordinates[0], [120, 30]);
 });
 

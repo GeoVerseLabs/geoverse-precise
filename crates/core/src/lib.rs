@@ -1,7 +1,7 @@
-//! # geoprecise-core
+//! # geoverse-precise-core
 //!
 //! Ellipsoid-accurate spatial analysis for client-side use (compiled to WASM by
-//! `geoprecise-wasm`, but this crate has no JS dependency).
+//! `geoverse-precise-wasm`, but this crate has no JS dependency).
 //!
 //! * [`geodesic`] / [`measure`] – Karney geodesics on WGS84: distance, bearing,
 //!   destination, length, area, along, nearest point on line.

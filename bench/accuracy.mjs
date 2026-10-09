@@ -1,7 +1,7 @@
-// Accuracy & speed comparison: turf.js / gcoord / proj4js vs geoprecise,
+// Accuracy & speed comparison: turf.js / gcoord / proj4js vs geoverse-precise,
 // against GeographicLib and PROJ reference data (bench/fixtures, see gen_fixtures.py).
 //
-//   cd packages/geoprecise && npm run build && cd ../../bench && npm i && node accuracy.mjs
+//   cd packages/geoverse-precise && npm run build && cd ../../bench && npm i && node accuracy.mjs
 //
 // Writes bench/out/report.json and bench/out/buffers.json (vertices for the
 // independent Python cross-check in verify_buffer.py).
@@ -10,7 +10,7 @@ import * as turf from '@turf/turf';
 import gcoord from 'gcoord';
 import coordtransform from 'coordtransform';
 import proj4 from 'proj4';
-import * as gp from '../packages/geoprecise/dist/index.js';
+import * as gp from '../packages/geoverse-precise/dist/index.js';
 
 await gp.init();
 const here = new URL('.', import.meta.url);
@@ -47,7 +47,7 @@ const report = {};
   report.distance = Object.fromEntries(
     Object.entries(byTag).map(([tag, v]) => [
       tag,
-      { turf_m: stats(v.turf), turf_rel: stats(v.turfRel), geoprecise_m: stats(v.gp) },
+      { turf_m: stats(v.turf), turf_rel: stats(v.turfRel), geoverse_precise_m: stats(v.gp) },
     ]),
   );
 }
@@ -62,7 +62,7 @@ const report = {};
     t.push(gp.distance(tp, [r.lon2, r.lat2], { units: 'meters' }));
     g.push(gp.distance(gpp, [r.lon2, r.lat2], { units: 'meters' }));
   }
-  report.destination = { turf_m: stats(t), geoprecise_m: stats(g) };
+  report.destination = { turf_m: stats(t), geoverse_precise_m: stats(g) };
 }
 
 // -------------------------------------------------------------------- area
@@ -78,8 +78,8 @@ const report = {};
     g[k].push((gp.area(poly, { edges: 'geodesic' }) - r.area) / r.area);
   }
   report.area = {
-    'radius<20km': { turf_rel: stats(t.small), geoprecise_rel: stats(g.small) },
-    'radius 20–800km': { turf_rel: stats(t.large), geoprecise_rel: stats(g.large) },
+    'radius<20km': { turf_rel: stats(t.small), geoverse_precise_rel: stats(g.small) },
+    'radius 20–800km': { turf_rel: stats(t.large), geoverse_precise_rel: stats(g.large) },
   };
 }
 
@@ -113,8 +113,8 @@ const report = {};
     g[k].push(Math.hypot(x2 - r.x, y2 - r.y));
   }
   report.projection = {
-    inZone: { proj4js_m: stats(p4.zone), geoprecise_m: stats(g.zone) },
-    wide6deg: { proj4js_m: stats(p4.wide), geoprecise_m: stats(g.wide) },
+    inZone: { proj4js_m: stats(p4.zone), geoverse_precise_m: stats(g.zone) },
+    wide6deg: { proj4js_m: stats(p4.wide), geoverse_precise_m: stats(g.wide) },
   };
   // batch speed
   const N = 200000;
@@ -122,7 +122,7 @@ const report = {};
   for (let i = 0; i < N; i++) { flat[2 * i] = 118 + (i % 1000) * 0.004; flat[2 * i + 1] = 28 + (i % 997) * 0.004; }
   const tp = time(() => { for (let i = 0; i < N; i++) proj4('EPSG:4326', def('EPSG:4549'), [flat[2 * i], flat[2 * i + 1]]); });
   const tg = time(() => gp.transformCoords(Float64Array.from(flat), 'WGS84', 'EPSG:4549'));
-  report.projection.speed_200k_points_ms = { proj4js: tp.ms, geoprecise_batch: tg.ms };
+  report.projection.speed_200k_points_ms = { proj4js: tp.ms, geoverse_precise_batch: tg.ms };
 }
 
 // --------------------------------------------------------------- GCJ-02
@@ -149,9 +149,9 @@ const report = {};
     bdGp.push(gp.distance(gp.bd09ToWgs84(b), w, { units: 'meters' }));
   }
   report.china = {
-    gcj02_forward_gcoord_vs_geoprecise_m: stats(fwdDiff),
-    gcj02_to_wgs84_roundtrip_m: { coordtransform: stats(invCt), gcoord: stats(invG), geoprecise: stats(invGp) },
-    bd09_to_wgs84_roundtrip_m: { gcoord: stats(bdG), geoprecise: stats(bdGp) },
+    gcj02_forward_gcoord_vs_geoverse_precise_m: stats(fwdDiff),
+    gcj02_to_wgs84_roundtrip_m: { coordtransform: stats(invCt), gcoord: stats(invG), geoverse_precise: stats(invGp) },
+    bd09_to_wgs84_roundtrip_m: { gcoord: stats(bdG), geoverse_precise: stats(bdGp) },
   };
 }
 
@@ -163,7 +163,7 @@ const dump = {};
     const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
     return polys.flatMap((p) => p[0].slice(0, -1));
   };
-  // Distance stick: geoprecise geodesic nearest-point (validated against brute force
+  // Distance stick: geoverse-precise geodesic nearest-point (validated against brute force
   // in Rust tests and against pyproj in verify_buffer.py).
   const errToLine = (verts, line, d) =>
     verts.map((v) => gp.pointToLineDistance(v, line, { units: 'meters', edges: 'geodesic' }) - d);
@@ -236,7 +236,7 @@ const dump = {};
   const pts = Array.from({ length: 100000 }, (_, i) => [[110 + (i % 100) * 0.01, 30 + (i % 77) * 0.01], [111 + (i % 50) * 0.02, 31]]);
   const t = time(() => { let s = 0; for (const [a, b] of pts) s += turf.distance(a, b); return s; });
   const g = time(() => { let s = 0; for (const [a, b] of pts) s += gp.distance(a, b); return s; });
-  report.speed_100k_distance_ms = { turf_haversine: t.ms, geoprecise_karney: g.ms };
+  report.speed_100k_distance_ms = { turf_haversine: t.ms, geoverse_precise_karney: g.ms };
 }
 
 writeFileSync(new URL('out/report.json', here), JSON.stringify(report, null, 2));

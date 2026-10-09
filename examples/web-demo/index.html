@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>geoprecise vs turf 缓冲区对比</title>
+    <title>geoverse-precise vs turf 缓冲区对比</title>
     <style>
       :root {
         --bg: #f7f7f5;
@@ -43,7 +43,7 @@
     <div id="app">
       <aside>
         <h1>缓冲区精度对比</h1>
-        <p class="sub">turf.js（球面 + 单一等距方位投影） vs geoprecise（WGS84 椭球大地线）</p>
+        <p class="sub">turf.js（球面 + 单一等距方位投影） vs geoverse-precise（WGS84 椭球大地线）</p>
 
         <fieldset>
           <legend>绘制</legend>
@@ -63,7 +63,7 @@
         <fieldset>
           <legend>参数</legend>
           <label>半径 <input id="radius" type="range" min="0.1" max="300" step="0.1" value="50" /> <span id="radiusLabel"></span></label>
-          <label><input id="projected" type="checkbox" /> geoprecise 使用 projected（快速）方法</label>
+          <label><input id="projected" type="checkbox" /> geoverse-precise 使用 projected（快速）方法</label>
           <label><input id="geodesicEdges" type="checkbox" /> 边按大地线解释（默认按经纬度直线）</label>
         </fieldset>
 
@@ -82,7 +82,7 @@
             <thead><tr><th></th><th>最大误差</th><th>相对</th><th>耗时</th></tr></thead>
             <tbody>
               <tr><td><span class="swatch" style="background:var(--turf)"></span>turf</td><td id="tErr">–</td><td id="tRel">–</td><td id="tMs">–</td></tr>
-              <tr><td><span class="swatch" style="background:var(--gp)"></span>geoprecise</td><td id="gErr">–</td><td id="gRel">–</td><td id="gMs">–</td></tr>
+              <tr><td><span class="swatch" style="background:var(--gp)"></span>geoverse-precise</td><td id="gErr">–</td><td id="gRel">–</td><td id="gMs">–</td></tr>
             </tbody>
           </table>
           <div class="hint" id="note"></div>

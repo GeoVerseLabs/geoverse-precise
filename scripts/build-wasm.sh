@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the WASM module and generate JS glue into packages/geoprecise/wasm.
+# Build the WASM module and generate JS glue into packages/geoverse-precise/wasm.
 #
 # Requirements:
 #   rustup target add wasm32-unknown-unknown
@@ -11,16 +11,16 @@
 #   CARGO_EXTRA      extra cargo args, e.g. "-Zbuild-std=std,panic_abort"
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="$ROOT/packages/geoprecise/wasm"
+OUT="$ROOT/packages/geoverse-precise/wasm"
 CARGO="${CARGO:-cargo}"
 
 cd "$ROOT"
 # shellcheck disable=SC2086
-"$CARGO" build -p geoprecise-wasm --release --target wasm32-unknown-unknown ${CARGO_EXTRA:-}
+"$CARGO" build -p geoverse-precise-wasm --release --target wasm32-unknown-unknown ${CARGO_EXTRA:-}
 
-WASM="$ROOT/target/wasm32-unknown-unknown/release/geoprecise_wasm.wasm"
+WASM="$ROOT/target/wasm32-unknown-unknown/release/geoverse_precise_wasm.wasm"
 rm -rf "$OUT" && mkdir -p "$OUT"
-wasm-bindgen "$WASM" --out-dir "$OUT" --target web --out-name geoprecise_wasm
+wasm-bindgen "$WASM" --out-dir "$OUT" --target web --out-name geoverse_precise_wasm
 
 # wasm-opt is optional. Binaryen before 116 renumbers tables without fixing the
 # export that points at them, which silently hands the JS glue the funcref table
@@ -40,7 +40,7 @@ fi
 if [ "$WASM_OPT_OK" = "1" ] && [ "${SKIP_WASM_OPT:-0}" != "1" ]; then
   wasm-opt -O3 --enable-bulk-memory --enable-nontrapping-float-to-int --enable-sign-ext \
     --enable-mutable-globals --enable-multivalue --enable-reference-types \
-    "$OUT/geoprecise_wasm_bg.wasm" -o "$OUT/geoprecise_wasm_bg.wasm" \
+    "$OUT/geoverse_precise_wasm_bg.wasm" -o "$OUT/geoverse_precise_wasm_bg.wasm" \
     || echo "wasm-opt failed; keeping unoptimised module"
 fi
 ls -la "$OUT"

@@ -2,7 +2,7 @@
 
 - 基准数据：`bench/gen_fixtures.py`，由 **GeographicLib 2.x（Python）** 和 **PROJ 9.5（pyproj 3.7）** 生成
 - 对比对象：`@turf/turf 7.4.0`、`gcoord 1.0.7`、`coordtransform 2.1.2`、`proj4 2.22.0`
-- 运行环境：Node 22，geoprecise 为 wasm32 release 构建（wasm-opt -O3）
+- 运行环境：Node 22，geoverse-precise 为 wasm32 release 构建（wasm-opt -O3）
 - 复现：`cd bench && node accuracy.mjs && python verify_buffer.py`
 - turf 逐函数行为对照另见 [TURF-COVERAGE.md](TURF-COVERAGE.md)，复现：`cd bench && node turf-parity.mjs`
 
@@ -10,17 +10,17 @@
 
 ## 1. 距离（600 个样本）
 
-| 场景 | turf 相对误差（中位 / 最大） | turf 最大绝对误差 | geoprecise 最大误差 |
+| 场景 | turf 相对误差（中位 / 最大） | turf 最大绝对误差 | geoverse-precise 最大误差 |
 |---|---|---|---|
 | 国内 50 km 以内 | 0.16% / 0.44% | 180 m | 2 nm |
 | 国内任意两点 | 0.15% / 0.42% | 12.3 km | 2 nm |
 | 全球任意两点 | 0.12% / 0.50% | 37.0 km | 4 nm |
 
-`destination`（300 个样本，10 m ~ 5000 km）：turf 中位误差 22.7 m、最大 16.0 km；geoprecise 最大 2 nm。
+`destination`（300 个样本，10 m ~ 5000 km）：turf 中位误差 22.7 m、最大 16.0 km；geoverse-precise 最大 2 nm。
 
 ## 2. 面积（120 个多边形）
 
-| 多边形大小 | turf 相对误差（中位 / 最大） | geoprecise 最大相对误差 |
+| 多边形大小 | turf 相对误差（中位 / 最大） | geoverse-precise 最大相对误差 |
 |---|---|---|
 | 半径 < 20 km | 0.19% / 0.41% | 2.4 × 10⁻⁹ |
 | 半径 20 ~ 800 km | 0.23% / 2.1% | 9.4 × 10⁻¹⁴ |
@@ -29,9 +29,9 @@
 
 ## 3. 缓冲区
 
-误差 = 输出顶点到输入几何的真实椭球距离 − 半径。“测量尺”是 geoprecise 的大地线最近点算法，另用 pyproj（`verify_buffer.py`）独立复核，两者差异最大 **3.8 nm**。
+误差 = 输出顶点到输入几何的真实椭球距离 − 半径。“测量尺”是 geoverse-precise 的大地线最近点算法，另用 pyproj（`verify_buffer.py`）独立复核，两者差异最大 **3.8 nm**。
 
-| 场景 | turf 最大误差 | geoprecise 默认（geodesic） | geoprecise projected |
+| 场景 | turf 最大误差 | geoverse-precise 默认（geodesic） | geoverse-precise projected |
 |---|---|---|---|
 | 点，1 km，北京 | 2.50 m（0.25%） | 1.5 nm | 1.5 nm |
 | 点，50 km，哈尔滨 | 142 m（0.28%） | 2.0 nm | 2.0 nm |
@@ -56,13 +56,13 @@
 | | 带内 | 6° 带外扩到 ±12° |
 |---|---|---|
 | proj4js 与 PROJ 的最大差 | 19 nm | 1.9 nm |
-| geoprecise 与 PROJ 的最大差 | 19 nm | 2.4 nm |
+| geoverse-precise 与 PROJ 的最大差 | 19 nm | 2.4 nm |
 
-两者精度相同。geoprecise 的优势在于批量接口：20 万点转 `EPSG:4549`，proj4js 逐点调用 1649 ms，geoprecise `transformCoords` 94 ms（约 17 倍）。EPSG 4491–4554 的带号、中央经线、假东距全部与 PROJ 定义一致。
+两者精度相同。geoverse-precise 的优势在于批量接口：20 万点转 `EPSG:4549`，proj4js 逐点调用 1649 ms，geoverse-precise `transformCoords` 94 ms（约 17 倍）。EPSG 4491–4554 的带号、中央经线、假东距全部与 PROJ 定义一致。
 
 ## 5. 国内坐标系（各 2000 个随机点）
 
-GCJ-02 正算：geoprecise 与 gcoord 结果一致（最大差 0.7 nm）。
+GCJ-02 正算：geoverse-precise 与 gcoord 结果一致（最大差 0.7 nm）。
 
 逆算回 WGS84 后与原始点的距离：
 
@@ -70,13 +70,13 @@ GCJ-02 正算：geoprecise 与 gcoord 结果一致（最大差 0.7 nm）。
 |---|---|---|---|
 | coordtransform（一步近似） | 0.73 m | 2.42 m | 4.47 m |
 | gcoord | 1.7 mm | 2.8 cm | 13.5 cm |
-| **geoprecise（迭代求解）** | 1.6 nm | 25 nm | 48 nm |
+| **geoverse-precise（迭代求解）** | 1.6 nm | 25 nm | 48 nm |
 
-BD-09 → WGS84 往返：gcoord 中位 6.5 cm、最大 21 cm；geoprecise 最大 0.18 µm。
+BD-09 → WGS84 往返：gcoord 中位 6.5 cm、最大 21 cm；geoverse-precise 最大 0.18 µm。
 
 ## 6. 单次距离调用开销
 
-10 万次距离：turf（haversine）13 ms，geoprecise（Karney 椭球算法 + JS↔WASM 调用）76 ms，平均每次约 0.8 µs。需要海量点对时，建议后续版本提供批量接口（见路线图）。
+10 万次距离：turf（haversine）13 ms，geoverse-precise（Karney 椭球算法 + JS↔WASM 调用）76 ms，平均每次约 0.8 µs。需要海量点对时，建议后续版本提供批量接口（见路线图）。
 
 ## 7. v1.1 的精度相关变化
 
@@ -100,7 +100,7 @@ BD-09 → WGS84 往返：gcoord 中位 6.5 cm、最大 21 cm；geoprecise 最大
 这一轮补齐的函数不是靠参考数据集判精度，而是靠**可独立验算的性质**：闭式解、守恒量、
 或者退化情形下的已知答案。下面是其中能给出确定答案的几项。
 
-| 检查 | turf | geoprecise | 判据 |
+| 检查 | turf | geoverse-precise | 判据 |
 |---|---|---|---|
 | 5 km 格网的邻点间距（39°N） | 4 992 m | 5 000 m | 要求的就是 5 km |
 | 矩形格网单元面积 / 标称 | 0.777× | 1.000× | 要求 5 km × 3 km |
@@ -116,5 +116,5 @@ BD-09 → WGS84 往返：gcoord 中位 6.5 cm、最大 21 cm；geoprecise 最大
 | 规则格网的样方计数（4×4） | 计数不均 | 全部为 4 | 8 能被 4 整除，应完全均匀 |
 | Moran's I（西→东斜坡，车邻域） | −0.0159 / 1.0000 | 0.9375 | turf 的度阈值取不到"四邻"：0.0095° 只够到南北两点 |
 
-`nearestNeighborAnalysis` 一项值得单独说明：闭式解和 geoprecise 差 0.4%（凸包用了公切包近似），
+`nearestNeighborAnalysis` 一项值得单独说明：闭式解和 geoverse-precise 差 0.4%（凸包用了公切包近似），
 和 turf 差 3.8 倍。turf 的偏差来自它在度空间里算研究区面积与距离。

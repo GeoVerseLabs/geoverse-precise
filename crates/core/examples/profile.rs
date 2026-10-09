@@ -1,15 +1,15 @@
 //! Stage-level profiling of the core algorithms (native, release).
 //!
-//!     cargo run --release -p geoprecise-core --example profile
+//!     cargo run --release -p geoverse-precise-core --example profile
 
 use std::time::Instant;
 
 use geo::{unary_union, BooleanOps, Coord, Geometry, LineString, MultiPolygon, Polygon};
-use geoprecise_core::buffer::{buffer, buffer_pieces, BufferMethod, BufferOptions};
-use geoprecise_core::crs::{Crs, Transformer};
-use geoprecise_core::densify::Edges;
-use geoprecise_core::overlay::{overlay, OverlayOp, OverlayOptions};
-use geoprecise_core::{geodesic, measure};
+use geoverse_precise_core::buffer::{buffer, buffer_pieces, BufferMethod, BufferOptions};
+use geoverse_precise_core::crs::{Crs, Transformer};
+use geoverse_precise_core::densify::Edges;
+use geoverse_precise_core::overlay::{overlay, OverlayOp, OverlayOptions};
+use geoverse_precise_core::{geodesic, measure};
 
 fn bench<T>(name: &str, reps: usize, mut f: impl FnMut() -> T) -> T {
     let mut out = f();
@@ -219,15 +219,15 @@ fn main() {
             .sum::<f64>()
     });
     {
-        use geoprecise_core::measure::approx_seg_distance_for_profiling as approx;
+        use geoverse_precise_core::measure::approx_seg_distance_for_profiling as approx;
         let verts: Vec<[f64; 3]> =
             ls.0.iter()
-                .map(|c| geoprecise_core::measure::unit_vec_for_profiling(*c))
+                .map(|c| geoverse_precise_core::measure::unit_vec_for_profiling(*c))
                 .collect();
         bench("1000 × spherical filter pass only", 20, || {
             let mut acc = 0.0;
             for p in &pts {
-                let pv = geoprecise_core::measure::unit_vec_for_profiling(*p);
+                let pv = geoverse_precise_core::measure::unit_vec_for_profiling(*p);
                 let mut m = f64::INFINITY;
                 for w in verts.windows(2) {
                     m = m.min(approx(w[0], w[1], pv).0);
@@ -254,17 +254,17 @@ fn main() {
     bench("1000 × point-in-polygon, no index (900 vertices)", 5, || {
         inside_pts
             .iter()
-            .filter(|p| geoprecise_core::predicates::point_in_polygon(**p, &poly_geom, false))
+            .filter(|p| geoverse_precise_core::predicates::point_in_polygon(**p, &poly_geom, false))
             .count()
     });
-    let prep = geoprecise_core::index::Prepared::new(poly_geom.clone()).unwrap();
+    let prep = geoverse_precise_core::index::Prepared::new(poly_geom.clone()).unwrap();
     bench("  Prepared::new (build index)", 20, || {
-        geoprecise_core::index::Prepared::new(poly_geom.clone()).unwrap()
+        geoverse_precise_core::index::Prepared::new(poly_geom.clone()).unwrap()
     });
     bench("1000 × point-in-polygon, indexed", 50, || {
         inside_pts.iter().filter(|p| prep.contains_point(**p, false)).count()
     });
-    let line_prep = geoprecise_core::index::Prepared::new(line_geom.clone()).unwrap();
+    let line_prep = geoverse_precise_core::index::Prepared::new(line_geom.clone()).unwrap();
     // points scattered close to the route (map-matching style workload)
     let near_pts: Vec<Coord> = (0..1000)
         .map(|i| {
@@ -301,11 +301,11 @@ fn main() {
     });
     #[cfg(feature = "index-stats")]
     {
-        geoprecise_core::index::STATS.with(|s| *s.borrow_mut() = (0, 0));
+        geoverse_precise_core::index::STATS.with(|s| *s.borrow_mut() = (0, 0));
         for p in &inside_pts {
             let _ = line_prep.nearest(*p);
         }
-        geoprecise_core::index::STATS.with(|s| {
+        geoverse_precise_core::index::STATS.with(|s| {
             let (c, r) = *s.borrow();
             println!(
                 "    candidates/query = {:.1}, refinements/query = {:.1}",

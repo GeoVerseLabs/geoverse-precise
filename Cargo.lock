@@ -187,7 +187,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoprecise-core"
+name = "geoverse-precise-core"
 version = "0.3.0"
 dependencies = [
  "approx",
@@ -201,10 +201,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoprecise-wasm"
+name = "geoverse-precise-wasm"
 version = "0.3.0"
 dependencies = [
- "geoprecise-core",
+ "geoverse-precise-core",
  "wasm-bindgen",
 ]
 

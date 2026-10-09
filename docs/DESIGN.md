@@ -1,4 +1,4 @@
-# geoprecise v1 设计说明
+# geoverse-precise v1 设计说明
 
 > 目标：用 Rust 编译成 WebAssembly，在浏览器端提供**椭球精度**的空间分析，替换 turf.js 中会产生失真、偏移的那部分能力。
 > v1 范围：测量、缓冲区、叠加分析、坐标转换。API 与 turf 对齐，可以逐个函数替换。
@@ -20,7 +20,7 @@
 
 结论：问题分三类——**地球模型**（正球体 → 应换成 WGS84 椭球）、**平面化方式**（单一投影中心 → 顶点应在椭球上直接求出）、**坐标系管理**（国内坐标系与投影坐标需要高精度互转）。
 
-> 补充：proj4js 的横轴墨卡托精度与 PROJ 一致（纳米级），引入 geoprecise 的投影能力主要是为了统一接口和批量性能（20 万点快约 17 倍），而不是修正 proj4js 的精度。
+> 补充：proj4js 的横轴墨卡托精度与 PROJ 一致（纳米级），引入 geoverse-precise 的投影能力主要是为了统一接口和批量性能（20 万点快约 17 倍），而不是修正 proj4js 的精度。
 
 ---
 
@@ -28,7 +28,7 @@
 
 ```
 ┌──────────────────────── 浏览器 / Node ─────────────────────────┐
-│  packages/geoprecise  TypeScript，turf 风格 API，GeoJSON 进出    │
+│  packages/geoverse-precise  TypeScript，turf 风格 API，GeoJSON 进出    │
 │        │  JSON 字符串 / Float64Array                            │
 │  crates/wasm          wasm-bindgen 导出层（很薄）               │
 │        │                                                        │
@@ -163,7 +163,7 @@ Karney 截距算法：以当前估计点为中心做**椭球心射投影**（大
 ## 4. API（TypeScript）
 
 ```ts
-import * as gp from 'geoprecise';
+import * as gp from 'geoverse-precise';
 await gp.init();                                 // 加载 wasm，一次即可（Node 下自动读文件）
 
 gp.distance(a, b, { units, crs });               // 默认 km
@@ -210,7 +210,7 @@ gp.booleanPointOnLine(pt, line, { tolerance: 0.5 });
 
 // v1.1：拓扑验证与质量检查
 gp.validate(geojson);                            // { valid, issues[] }
-gp.makeValid(geojson, { snapGrid, minArea });    // 结果带 geoprecise:fixes
+gp.makeValid(geojson, { snapGrid, minArea });    // 结果带 geoverse-precise:fixes
 gp.coverageIssues(fc, { gapTolerance: 0.5 });    // 重叠 + 缝隙
 gp.networkIssues(fc, { tolerance: 0.05, maxUndershoot: 2, maxOvershoot: 1 });
 gp.snapRound(g, 0.01); gp.snapTo(g, reference, 0.5);
@@ -228,11 +228,11 @@ gp.utmCrs(lon, lat); gp.normalizeCrs(crs); gp.version();
 ## 5. 工程结构与构建
 
 ```
-geoprecise/
+geoverse-precise/
 ├─ Cargo.toml                 workspace（Rust ≥ 1.88）
 ├─ crates/core                纯 Rust 核心 + 单元测试 + GeographicLib/PROJ 对照测试
 ├─ crates/wasm                wasm-bindgen 导出
-├─ packages/geoprecise        TS 封装（npm 包，含 wasm/ 与 dist/）
+├─ packages/geoverse-precise        TS 封装（npm 包，含 wasm/ 与 dist/）
 ├─ examples/web-demo          MapLibre 对比页（Vite），可切换 OSM / 高德底图
 ├─ bench                      基准数据生成、精度与速度对比、pyproj 独立复核
 ├─ scripts/build-wasm.sh      cargo → wasm-bindgen → wasm-opt
