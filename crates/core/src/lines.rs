@@ -33,8 +33,7 @@ pub fn line_split(line: &LineString, splitter: &Geometry) -> Vec<LineString> {
             if len2 == 0.0 {
                 return;
             }
-            let t = ((c.x - seg.start.x) * (seg.end.x - seg.start.x)
-                + (c.y - seg.start.y) * (seg.end.y - seg.start.y))
+            let t = ((c.x - seg.start.x) * (seg.end.x - seg.start.x) + (c.y - seg.start.y) * (seg.end.y - seg.start.y))
                 / len2;
             if t > 1e-12 && t < 1.0 - 1e-12 {
                 cuts.push((i, t));
@@ -103,7 +102,10 @@ fn planar_point_segment(p: Coord, a: Coord, b: Coord) -> (Coord, f64, f64) {
         return (a, (p.x - a.x).hypot(p.y - a.y), 0.0);
     }
     let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0);
-    let q = Coord { x: a.x + t * dx, y: a.y + t * dy };
+    let q = Coord {
+        x: a.x + t * dx,
+        y: a.y + t * dy,
+    };
     ((q), (p.x - q.x).hypot(p.y - q.y), t)
 }
 
@@ -125,7 +127,9 @@ pub fn line_offset(line: &LineString, dist_m: f64, edges: Edges, steps: usize) -
         v
     };
     if pts.len() < 2 {
-        return Err(Error::InvalidGeometry("line needs at least 2 distinct positions".into()));
+        return Err(Error::InvalidGeometry(
+            "line needs at least 2 distinct positions".into(),
+        ));
     }
     let side = if dist_m >= 0.0 { -90.0 } else { 90.0 };
     let d = dist_m.abs();
@@ -187,8 +191,14 @@ pub fn line_overlap(a: &Geometry, b: &Geometry, tolerance_m: f64) -> Result<Mult
         let (x, y) = frame.project(c.x, c.y);
         Coord { x, y }
     };
-    let asegs: Vec<(Coord, Coord)> = ops::lines_of(a).into_iter().map(|l| (proj(l.start), proj(l.end))).collect();
-    let bsegs: Vec<(Coord, Coord)> = ops::lines_of(b).into_iter().map(|l| (proj(l.start), proj(l.end))).collect();
+    let asegs: Vec<(Coord, Coord)> = ops::lines_of(a)
+        .into_iter()
+        .map(|l| (proj(l.start), proj(l.end)))
+        .collect();
+    let bsegs: Vec<(Coord, Coord)> = ops::lines_of(b)
+        .into_iter()
+        .map(|l| (proj(l.start), proj(l.end)))
+        .collect();
     let tol = tolerance_m.max(1e-9);
 
     let mut parts: Vec<LineString> = Vec::new();
@@ -261,7 +271,10 @@ pub fn line_overlap(a: &Geometry, b: &Geometry, tolerance_m: f64) -> Result<Mult
         }
         for (k, (t0, t1)) in merged.iter().enumerate() {
             let at = |t: f64| {
-                let c = Coord { x: p.x + dir.0 * t, y: p.y + dir.1 * t };
+                let c = Coord {
+                    x: p.x + dir.0 * t,
+                    y: p.y + dir.1 * t,
+                };
                 let (x, y) = frame.unproject(c.x, c.y);
                 Coord { x, y }
             };
@@ -333,7 +346,8 @@ mod tests {
         assert_eq!(parts[1].0.first().unwrap(), &coord! {x: 2.0, y: 0.0});
 
         // a polygon boundary can split too
-        let poly = Geometry::Polygon(polygon![(x: 1.0, y: -1.0), (x: 3.0, y: -1.0), (x: 3.0, y: 1.0), (x: 1.0, y: 1.0)]);
+        let poly =
+            Geometry::Polygon(polygon![(x: 1.0, y: -1.0), (x: 3.0, y: -1.0), (x: 3.0, y: 1.0), (x: 1.0, y: 1.0)]);
         assert_eq!(line_split(&line, &poly).len(), 3);
 
         // no intersection returns the original
@@ -344,9 +358,7 @@ mod tests {
     #[test]
     fn offsetting_keeps_the_distance() {
         let dense = |l: &LineString| MultiLineString(vec![LineString(densify::planar_path(&l.0, 0.01))]);
-        let dist_to = |l: &MultiLineString, c: Coord| {
-            measure::nearest_point_on_line_opts(l, c, false).unwrap().dist
-        };
+        let dist_to = |l: &MultiLineString, c: Coord| measure::nearest_point_on_line_opts(l, c, false).unwrap().dist;
 
         // a straight line has no joints: every offset vertex is exactly d away
         let straight = line_string![(x: 120.0, y: 30.0), (x: 120.3, y: 30.0)];

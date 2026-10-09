@@ -51,7 +51,9 @@ impl Buckets {
         let cell = cell.max(1e-6);
         let mut map: HashMap<(i64, i64), Vec<usize>> = HashMap::new();
         for (i, (x, y)) in pts.iter().enumerate() {
-            map.entry(((x / cell).floor() as i64, (y / cell).floor() as i64)).or_default().push(i);
+            map.entry(((x / cell).floor() as i64, (y / cell).floor() as i64))
+                .or_default()
+                .push(i);
         }
         Buckets { cell, map, pts }
     }
@@ -92,11 +94,23 @@ pub fn clusters_dbscan(points: &[Coord], max_distance_m: f64, min_points: usize)
     if n == 0 {
         return Ok(vec![]);
     }
-    let frame = LocalFrame::for_geometries(points.iter().map(|c| Geometry::Point(Point(*c))).collect::<Vec<_>>().iter())?;
+    let frame = LocalFrame::for_geometries(
+        points
+            .iter()
+            .map(|c| Geometry::Point(Point(*c)))
+            .collect::<Vec<_>>()
+            .iter(),
+    )?;
     let projected: Vec<(f64, f64)> = points.iter().map(|c| frame.project(c.x, c.y)).collect();
     let buckets = Buckets::new(projected, max_distance_m);
 
-    let mut labels = vec![DbscanLabel { role: DbscanRole::Noise, cluster: None }; n];
+    let mut labels = vec![
+        DbscanLabel {
+            role: DbscanRole::Noise,
+            cluster: None
+        };
+        n
+    ];
     let mut visited = vec![false; n];
     let mut neigh: Vec<usize> = Vec::new();
     let mut more: Vec<usize> = Vec::new();
@@ -113,14 +127,20 @@ pub fn clusters_dbscan(points: &[Coord], max_distance_m: f64, min_points: usize)
         }
         let id = next_cluster;
         next_cluster += 1;
-        labels[i] = DbscanLabel { role: DbscanRole::Core, cluster: Some(id) };
+        labels[i] = DbscanLabel {
+            role: DbscanRole::Core,
+            cluster: Some(id),
+        };
         let mut queue: Vec<usize> = neigh.clone();
         let mut k = 0;
         while k < queue.len() {
             let j = queue[k];
             k += 1;
             if labels[j].cluster.is_none() {
-                labels[j] = DbscanLabel { role: DbscanRole::Edge, cluster: Some(id) };
+                labels[j] = DbscanLabel {
+                    role: DbscanRole::Edge,
+                    cluster: Some(id),
+                };
             }
             if visited[j] {
                 continue;
@@ -128,7 +148,10 @@ pub fn clusters_dbscan(points: &[Coord], max_distance_m: f64, min_points: usize)
             visited[j] = true;
             buckets.within(j, max_distance_m, &mut more);
             if more.len() >= min_points.max(1) {
-                labels[j] = DbscanLabel { role: DbscanRole::Core, cluster: Some(id) };
+                labels[j] = DbscanLabel {
+                    role: DbscanRole::Core,
+                    cluster: Some(id),
+                };
                 for &m in &more {
                     if !queue.contains(&m) {
                         queue.push(m);
@@ -164,8 +187,19 @@ pub fn clusters_kmeans(points: &[Coord], k: usize) -> Result<KmeansResult> {
         return Err(Error::InvalidArgument("kmeans needs at least one point".into()));
     }
     // turf's default: sqrt(n / 2), clamped to the input size
-    let k = if k == 0 { ((n as f64 / 2.0).sqrt().round() as usize).max(1) } else { k }.min(n);
-    let frame = LocalFrame::for_geometries(points.iter().map(|c| Geometry::Point(Point(*c))).collect::<Vec<_>>().iter())?;
+    let k = if k == 0 {
+        ((n as f64 / 2.0).sqrt().round() as usize).max(1)
+    } else {
+        k
+    }
+    .min(n);
+    let frame = LocalFrame::for_geometries(
+        points
+            .iter()
+            .map(|c| Geometry::Point(Point(*c)))
+            .collect::<Vec<_>>()
+            .iter(),
+    )?;
     let p: Vec<(f64, f64)> = points.iter().map(|c| frame.project(c.x, c.y)).collect();
 
     let mut seed = 0x9E37_79B9_7F4A_7C15u64;
@@ -278,7 +312,9 @@ pub struct NearestNeighbour {
 pub fn nearest_neighbour_analysis(points: &[Coord], study_area: Option<&Geometry>) -> Result<NearestNeighbour> {
     let n = points.len();
     if n < 2 {
-        return Err(Error::InvalidArgument("nearest-neighbour analysis needs at least 2 points".into()));
+        return Err(Error::InvalidArgument(
+            "nearest-neighbour analysis needs at least 2 points".into(),
+        ));
     }
     let geoms: Vec<Geometry> = points.iter().map(|c| Geometry::Point(Point(*c))).collect();
     let area_geom = match study_area {
@@ -394,7 +430,11 @@ pub fn standard_deviational_ellipse(points: &[Coord], weights: Option<&[f64]>, s
     }
     // orientation of the major axis (the classic Yuill formulation)
     let theta = if sxy.abs() < 1e-12 {
-        if sxx >= syy { 0.0 } else { std::f64::consts::FRAC_PI_2 }
+        if sxx >= syy {
+            0.0
+        } else {
+            std::f64::consts::FRAC_PI_2
+        }
     } else {
         ((sxx - syy + ((sxx - syy).powi(2) + 4.0 * sxy * sxy).sqrt()) / (2.0 * sxy)).atan()
     };
@@ -416,7 +456,10 @@ pub fn standard_deviational_ellipse(points: &[Coord], weights: Option<&[f64]>, s
     let rotation = theta.to_degrees();
     let polygon = shapes::ellipse(centre, sigma_x, sigma_y, rotation, steps.max(16));
     let g = Geometry::Polygon(polygon.clone());
-    let inside = points.iter().filter(|c| predicates::point_in_polygon(**c, &g, false)).count();
+    let inside = points
+        .iter()
+        .filter(|c| predicates::point_in_polygon(**c, &g, false))
+        .count();
     let major_bearing = if sigma_x >= sigma_y {
         (90.0 + rotation).rem_euclid(180.0)
     } else {
@@ -501,7 +544,10 @@ pub struct PathOptions {
 
 impl Default for PathOptions {
     fn default() -> Self {
-        PathOptions { resolution_m: 1_000.0, padding_m: 0.0 }
+        PathOptions {
+            resolution_m: 1_000.0,
+            padding_m: 0.0,
+        }
     }
 }
 
@@ -553,7 +599,10 @@ pub fn shortest_path(start: Coord, end: Coord, obstacles: &[Geometry], opts: &Pa
     // Anchor the lattice on the start point: the route then leaves it without a
     // half-cell jog, which on an unobstructed run is the whole of the error.
     let (sx, sy) = frame.project(start.x, start.y);
-    let (x0, y0) = (sx - ((sx - x0) / step).ceil() * step, sy - ((sy - y0) / step).ceil() * step);
+    let (x0, y0) = (
+        sx - ((sx - x0) / step).ceil() * step,
+        sy - ((sy - y0) / step).ceil() * step,
+    );
     let nx = (((x1 - x0) / step).ceil() as usize + 1).max(2);
     let ny = (((y1 - y0) / step).ceil() as usize + 1).max(2);
     if nx * ny > 12_000_000 {
@@ -593,7 +642,12 @@ pub fn shortest_path(start: Coord, end: Coord, obstacles: &[Geometry], opts: &Pa
                         continue;
                     }
                     let (ii, jj) = (i as i64 + di, j as i64 + dj);
-                    if ii >= 0 && jj >= 0 && (ii as usize) < nx && (jj as usize) < ny && !blocked[jj as usize * nx + ii as usize] {
+                    if ii >= 0
+                        && jj >= 0
+                        && (ii as usize) < nx
+                        && (jj as usize) < ny
+                        && !blocked[jj as usize * nx + ii as usize]
+                    {
                         return jj as usize * nx + ii as usize;
                     }
                 }
@@ -625,7 +679,16 @@ pub fn shortest_path(start: Coord, end: Coord, obstacles: &[Geometry], opts: &Pa
             continue; // a stale entry
         }
         let (i, j) = (k % nx, k / nx);
-        for (di, dj) in [(-1i64, 0i64), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)] {
+        for (di, dj) in [
+            (-1i64, 0i64),
+            (1, 0),
+            (0, -1),
+            (0, 1),
+            (-1, -1),
+            (-1, 1),
+            (1, -1),
+            (1, 1),
+        ] {
             let (ii, jj) = (i as i64 + di, j as i64 + dj);
             if ii < 0 || jj < 0 || ii as usize >= nx || jj as usize >= ny {
                 continue;
@@ -711,7 +774,13 @@ mod tests {
 
     fn blob(centre: Coord, radius: f64, n: usize) -> Vec<Coord> {
         (0..n)
-            .map(|k| go(centre, 360.0 * k as f64 / n as f64, radius * (0.3 + 0.7 * (k % 3) as f64 / 3.0)))
+            .map(|k| {
+                go(
+                    centre,
+                    360.0 * k as f64 / n as f64,
+                    radius * (0.3 + 0.7 * (k % 3) as f64 / 3.0),
+                )
+            })
             .collect()
     }
 
@@ -763,7 +832,11 @@ mod tests {
             assert!(group.iter().all(|a| *a == group[0]), "blob {b} split: {group:?}");
             // its centroid sits at the blob centre
             let c = r.centroids[group[0]];
-            assert!(measure::distance(c, centres[b]) < 800.0, "{:?}", measure::distance(c, centres[b]));
+            assert!(
+                measure::distance(c, centres[b]) < 800.0,
+                "{:?}",
+                measure::distance(c, centres[b])
+            );
         }
         // distinct clusters, and the same answer on a re-run
         let mut seen: Vec<usize> = r.assignment.clone();
@@ -783,7 +856,11 @@ mod tests {
         let mut lattice = Vec::new();
         for j in 0..8 {
             for i in 0..8 {
-                let p = go(go(coord! {x: 120.0, y: 30.0}, 90.0, i as f64 * 3_000.0), 0.0, j as f64 * 3_000.0);
+                let p = go(
+                    go(coord! {x: 120.0, y: 30.0}, 90.0, i as f64 * 3_000.0),
+                    0.0,
+                    j as f64 * 3_000.0,
+                );
                 lattice.push(p);
             }
         }
@@ -816,9 +893,17 @@ mod tests {
         };
         let e = standard_deviational_ellipse(&cloud(90.0), None, 64).unwrap();
         assert!(measure::distance(e.centre, centre) < 50.0);
-        assert!(e.semi_major_m / e.semi_minor_m > 5.0, "{:?}", (e.semi_major_m, e.semi_minor_m));
+        assert!(
+            e.semi_major_m / e.semi_minor_m > 5.0,
+            "{:?}",
+            (e.semi_major_m, e.semi_minor_m)
+        );
         // east-west spread ⇒ the major axis lies along east
-        assert!((e.major_bearing_deg - 90.0).abs() < 2.0, "bearing {}", e.major_bearing_deg);
+        assert!(
+            (e.major_bearing_deg - 90.0).abs() < 2.0,
+            "bearing {}",
+            e.major_bearing_deg
+        );
         assert!(e.contained > 0 && e.percentage_contained > 50.0, "{e:?}");
 
         // the fit tracks the cloud whatever direction it points, and the axes
@@ -839,12 +924,20 @@ mod tests {
                 .0
                 .iter()
                 .max_by(|a, b| {
-                    measure::distance(r.centre, **a).partial_cmp(&measure::distance(r.centre, **b)).unwrap()
+                    measure::distance(r.centre, **a)
+                        .partial_cmp(&measure::distance(r.centre, **b))
+                        .unwrap()
                 })
                 .copied()
                 .unwrap();
-            let drawn = geodesic::inverse(r.centre.x, r.centre.y, far.x, far.y).azi1.rem_euclid(180.0);
-            assert!((drawn - r.major_bearing_deg).abs() < 2.0, "cloud {az}: drawn {drawn} vs {}", r.major_bearing_deg);
+            let drawn = geodesic::inverse(r.centre.x, r.centre.y, far.x, far.y)
+                .azi1
+                .rem_euclid(180.0);
+            assert!(
+                (drawn - r.major_bearing_deg).abs() < 2.0,
+                "cloud {az}: drawn {drawn} vs {}",
+                r.major_bearing_deg
+            );
         }
 
         // weights pull the centre
@@ -887,7 +980,10 @@ mod tests {
         let start = coord! {x: 120.0, y: 30.0};
         let end = coord! {x: 120.4, y: 30.0};
         let direct = measure::distance(start, end);
-        let opts = PathOptions { resolution_m: 1_500.0, padding_m: 6_000.0 };
+        let opts = PathOptions {
+            resolution_m: 1_500.0,
+            padding_m: 6_000.0,
+        };
 
         // with nothing in the way the route is essentially the straight line
         let clear = shortest_path(start, end, &[], &opts).unwrap();
@@ -902,13 +998,22 @@ mod tests {
         ]);
         let around = shortest_path(start, end, std::slice::from_ref(&wall), &opts).unwrap();
         let len = measure::line_length(&around);
-        assert!(len > clear_len * 1.02, "the route ignored the wall: {len} vs {clear_len}");
+        assert!(
+            len > clear_len * 1.02,
+            "the route ignored the wall: {len} vs {clear_len}"
+        );
         // and the detour is not wildly longer than going round the wall's end
         assert!(len < clear_len * 1.5, "{len} vs {clear_len}");
         for c in &around.0 {
-            assert!(!predicates::point_in_polygon(*c, &wall, false), "{c:?} is inside the wall");
+            assert!(
+                !predicates::point_in_polygon(*c, &wall, false),
+                "{c:?} is inside the wall"
+            );
         }
-        assert!(!predicates::intersects(&Geometry::LineString(around.clone()), &wall), "the route crosses the wall");
+        assert!(
+            !predicates::intersects(&Geometry::LineString(around.clone()), &wall),
+            "the route crosses the wall"
+        );
         // it goes round the open end
         assert!(around.0.iter().any(|c| c.y > 30.04), "{:?}", around.0);
         assert_eq!(around.0.first(), Some(&start));
@@ -919,9 +1024,14 @@ mod tests {
         // past its ends, which is the whole point of routing round it.)
         let ring = Geometry::Polygon(geo::Polygon::new(
             line_string![(x: 119.9, y: 29.9), (x: 120.1, y: 29.9), (x: 120.1, y: 30.1), (x: 119.9, y: 30.1), (x: 119.9, y: 29.9)],
-            vec![line_string![(x: 119.96, y: 29.96), (x: 120.04, y: 29.96), (x: 120.04, y: 30.04), (x: 119.96, y: 30.04), (x: 119.96, y: 29.96)]],
+            vec![
+                line_string![(x: 119.96, y: 29.96), (x: 120.04, y: 29.96), (x: 120.04, y: 30.04), (x: 119.96, y: 30.04), (x: 119.96, y: 29.96)],
+            ],
         ));
-        assert!(!predicates::point_in_polygon(start, &ring, false), "the start must sit in the courtyard");
+        assert!(
+            !predicates::point_in_polygon(start, &ring, false),
+            "the start must sit in the courtyard"
+        );
         assert!(shortest_path(start, end, &[ring], &opts).is_err());
     }
 }

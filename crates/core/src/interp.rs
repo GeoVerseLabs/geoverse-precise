@@ -12,9 +12,9 @@ use std::collections::HashMap;
 
 use geo::{Coord, Geometry, LineString, MultiLineString, MultiPolygon, Polygon};
 
+use crate::densify::Edges;
 use crate::grids::{self, GridKind, GridOptions};
 use crate::local::LocalFrame;
-use crate::densify::Edges;
 use crate::overlay::{self, OverlayOp, OverlayOptions};
 use crate::{measure, Error, Result};
 
@@ -48,7 +48,15 @@ impl Grid {
         if !dx.is_finite() || !dy.is_finite() || dx == 0.0 || dy == 0.0 {
             return Err(Error::InvalidArgument("grid spacing must be non-zero".into()));
         }
-        Ok(Grid { x0, y0, dx, dy, nx, ny, values })
+        Ok(Grid {
+            x0,
+            y0,
+            dx,
+            dy,
+            nx,
+            ny,
+            values,
+        })
     }
 
     /// Recover a lattice from scattered sample points (turf feeds contouring a
@@ -58,7 +66,9 @@ impl Grid {
     /// input, so a grid written out with rounded coordinates still reads back.
     pub fn from_points(points: &[(Coord, f64)]) -> Result<Grid> {
         if points.len() < 4 {
-            return Err(Error::InvalidArgument("need at least 4 points to infer a lattice".into()));
+            return Err(Error::InvalidArgument(
+                "need at least 4 points to infer a lattice".into(),
+            ));
         }
         let axis = |vals: &mut Vec<f64>| -> Result<(f64, f64, usize)> {
             vals.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -81,7 +91,9 @@ impl Grid {
         let (x0, dx, nx) = axis(&mut points.iter().map(|(c, _)| c.x).collect())?;
         let (y0, dy, ny) = axis(&mut points.iter().map(|(c, _)| c.y).collect())?;
         if nx < 2 || ny < 2 || nx * ny > 40_000_000 {
-            return Err(Error::InvalidArgument(format!("inferred an implausible {nx}×{ny} lattice")));
+            return Err(Error::InvalidArgument(format!(
+                "inferred an implausible {nx}×{ny} lattice"
+            )));
         }
         let mut values = vec![f64::NAN; nx * ny];
         for (c, z) in points {
@@ -97,7 +109,10 @@ impl Grid {
 
     #[inline]
     pub fn position(&self, i: usize, j: usize) -> Coord {
-        Coord { x: self.x0 + i as f64 * self.dx, y: self.y0 + j as f64 * self.dy }
+        Coord {
+            x: self.x0 + i as f64 * self.dx,
+            y: self.y0 + j as f64 * self.dy,
+        }
     }
 
     #[inline]
@@ -141,7 +156,10 @@ fn tri_level_segment(t: &[(Coord, f64); 3], level: f64) -> Option<(Coord, Coord)
         let (a, b) = (zp - level, zq - level);
         if (a < 0.0 && b >= 0.0) || (a >= 0.0 && b < 0.0) {
             let f = a / (a - b);
-            hits.push(Coord { x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f });
+            hits.push(Coord {
+                x: p.x + (q.x - p.x) * f,
+                y: p.y + (q.y - p.y) * f,
+            });
         }
     }
     if hits.len() == 2 && (hits[0].x != hits[1].x || hits[0].y != hits[1].y) {
@@ -163,7 +181,10 @@ fn tri_clip_above(t: &[(Coord, f64); 3], level: f64) -> Option<Vec<Coord>> {
         }
         if (a < 0.0) != (b < 0.0) {
             let f = a / (a - b);
-            out.push(Coord { x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f });
+            out.push(Coord {
+                x: p.x + (q.x - p.x) * f,
+                y: p.y + (q.y - p.y) * f,
+            });
         }
     }
     if out.len() < 3 {
@@ -206,7 +227,9 @@ fn stitch(segments: Vec<(Coord, Coord)>) -> MultiLineString {
             loop {
                 let tip = if front { chain[0] } else { *chain.last().unwrap() };
                 let Some(cands) = ends.get(&key_of(tip)) else { break };
-                let Some(&next) = cands.iter().find(|&&i| !used[i]) else { break };
+                let Some(&next) = cands.iter().find(|&&i| !used[i]) else {
+                    break;
+                };
                 used[next] = true;
                 let (a, b) = segments[next];
                 let other = if key_of(a) == key_of(tip) { b } else { a };
@@ -242,7 +265,10 @@ pub fn isolines(grid: &Grid, breaks: &[f64]) -> Vec<(f64, MultiLineString)> {
 /// Contour geometry is built from lattice triangles whose edges are straight in
 /// lon/lat by construction, which is exactly what `Edges::Planar` means — the
 /// interpolation defines the edges, so there is nothing to densify.
-const OPTS: OverlayOptions = OverlayOptions { edges: Edges::Planar, tolerance: 0.001 };
+const OPTS: OverlayOptions = OverlayOptions {
+    edges: Edges::Planar,
+    tolerance: 0.001,
+};
 
 /// Filled bands between consecutive breaks (turf's `isobands`).
 ///
@@ -305,7 +331,12 @@ pub struct IdwOptions {
 
 impl Default for IdwOptions {
     fn default() -> Self {
-        IdwOptions { power: 1.0, search_radius_m: None, grid: GridOptions::default(), kind: GridKind::Square }
+        IdwOptions {
+            power: 1.0,
+            search_radius_m: None,
+            grid: GridOptions::default(),
+            kind: GridKind::Square,
+        }
     }
 }
 
@@ -536,7 +567,13 @@ pub fn voronoi(points: &[Coord], bbox: [f64; 4]) -> Result<Vec<Polygon>> {
                 &OPTS,
             )?;
             // a cell stays one piece under a convex clip
-            out.push(clipped.0.into_iter().next().unwrap_or_else(|| Polygon::new(LineString(vec![]), vec![])));
+            out.push(
+                clipped
+                    .0
+                    .into_iter()
+                    .next()
+                    .unwrap_or_else(|| Polygon::new(LineString(vec![]), vec![])),
+            );
         }
     }
     Ok(out)
@@ -574,7 +611,9 @@ mod tests {
     fn lcg(seed: u64) -> impl FnMut() -> f64 {
         let mut s = seed;
         move || {
-            s = s.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            s = s
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
             ((s >> 11) as f64) / ((1u64 << 53) as f64)
         }
     }
@@ -629,7 +668,7 @@ mod tests {
             assert!(n >= g.ny, "{n} vertices");
         }
         // a level outside the data has no contour
-        assert!(isolines(&g, &[119.0])[0].1.0.is_empty());
+        assert!(isolines(&g, &[119.0])[0].1 .0.is_empty());
     }
 
     #[test]
@@ -641,7 +680,10 @@ mod tests {
         let mut v = Vec::with_capacity(nx * ny);
         for j in 0..ny {
             for i in 0..nx {
-                let p = Coord { x: x0 + i as f64 * d, y: y0 + j as f64 * d };
+                let p = Coord {
+                    x: x0 + i as f64 * d,
+                    y: y0 + j as f64 * d,
+                };
                 v.push(-measure::distance(p, centre));
             }
         }
@@ -672,7 +714,11 @@ mod tests {
             assert!(a > 0.0, "band [{lo}, {hi}) is empty");
             // the band's width in x is (hi - lo) out of the 0.2° domain
             let share = (hi - lo) / 0.2;
-            assert!((a / full - share).abs() < 1e-3, "band [{lo}, {hi}): {} vs {share}", a / full);
+            assert!(
+                (a / full - share).abs() < 1e-3,
+                "band [{lo}, {hi}): {} vs {share}",
+                a / full
+            );
             sum += a;
         }
         assert!((sum / full - 1.0).abs() < 1e-3, "bands cover {}", sum / full);
@@ -698,7 +744,10 @@ mod tests {
         let pts = vec![(a, 0.0), (b, 100.0)];
         let opts = IdwOptions {
             power: 2.0,
-            grid: GridOptions { width_m: 2_000.0, ..Default::default() },
+            grid: GridOptions {
+                width_m: 2_000.0,
+                ..Default::default()
+            },
             kind: GridKind::Point,
             ..Default::default()
         };
@@ -723,7 +772,10 @@ mod tests {
         let near = interpolate(
             &[(a, 42.0)],
             [120.0, 29.99, 120.2, 30.01],
-            &IdwOptions { search_radius_m: Some(5_000.0), ..opts },
+            &IdwOptions {
+                search_radius_m: Some(5_000.0),
+                ..opts
+            },
             None,
         )
         .unwrap();
@@ -757,8 +809,12 @@ mod tests {
         assert!(!tris.is_empty());
 
         // the triangles tile the convex hull exactly
-        let hull = ops::convex_hull(&pts.iter().map(|(c, _)| Geometry::Point(geo::Point(*c))).collect::<Vec<_>>())
-            .unwrap();
+        let hull = ops::convex_hull(
+            &pts.iter()
+                .map(|(c, _)| Geometry::Point(geo::Point(*c)))
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
         let hull_area = measure::area_with(&Geometry::Polygon(hull.clone()), Edges::Planar);
         let sum: f64 = tris
             .iter()
@@ -810,10 +866,18 @@ mod tests {
         let smallest = areas.iter().cloned().fold(f64::MAX, f64::min);
         let cell = measure::distance(g.position(0, 0), g.position(1, 0))
             * measure::distance(g.position(0, 0), g.position(0, 1));
-        assert!(smallest > 0.4 * cell, "sliver of {smallest} m² against a {cell} m² cell");
+        assert!(
+            smallest > 0.4 * cell,
+            "sliver of {smallest} m² against a {cell} m² cell"
+        );
 
         // and the triangles still tile the hull
-        let hull = ops::convex_hull(&pts.iter().map(|(c, _)| Geometry::Point(geo::Point(*c))).collect::<Vec<_>>()).unwrap();
+        let hull = ops::convex_hull(
+            &pts.iter()
+                .map(|(c, _)| Geometry::Point(geo::Point(*c)))
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
         let hull_area = measure::area_with(&Geometry::Polygon(hull), Edges::Planar);
         let sum: f64 = areas.iter().sum();
         assert!((sum / hull_area - 1.0).abs() < 1e-6, "{sum} vs {hull_area}");
@@ -835,7 +899,10 @@ mod tests {
             let g = Geometry::Polygon(cell.clone());
             sum += measure::area_with(&g, Edges::Planar);
             // a site lies in its own cell
-            assert!(predicates::point_in_polygon(sites[k], &g, false), "site {k} outside its cell");
+            assert!(
+                predicates::point_in_polygon(sites[k], &g, false),
+                "site {k} outside its cell"
+            );
             // and every corner of the cell is no closer to another site
             for c in cell.exterior().0.iter() {
                 let own = measure::distance(*c, sites[k]);

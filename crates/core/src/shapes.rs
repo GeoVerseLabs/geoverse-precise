@@ -40,7 +40,11 @@ pub fn polygon_smooth(g: &Geometry, iterations: usize) -> Result<Geometry> {
 
 fn chaikin_ring(ring: &LineString) -> LineString {
     let pts = &ring.0;
-    let n = if pts.first() == pts.last() { pts.len() - 1 } else { pts.len() };
+    let n = if pts.first() == pts.last() {
+        pts.len() - 1
+    } else {
+        pts.len()
+    };
     if n < 3 {
         return ring.clone();
     }
@@ -48,8 +52,14 @@ fn chaikin_ring(ring: &LineString) -> LineString {
     for i in 0..n {
         let a = pts[i];
         let b = pts[(i + 1) % n];
-        out.push(Coord { x: 0.75 * a.x + 0.25 * b.x, y: 0.75 * a.y + 0.25 * b.y });
-        out.push(Coord { x: 0.25 * a.x + 0.75 * b.x, y: 0.25 * a.y + 0.75 * b.y });
+        out.push(Coord {
+            x: 0.75 * a.x + 0.25 * b.x,
+            y: 0.75 * a.y + 0.25 * b.y,
+        });
+        out.push(Coord {
+            x: 0.25 * a.x + 0.75 * b.x,
+            y: 0.25 * a.y + 0.75 * b.y,
+        });
     }
     out.push(out[0]);
     LineString(out)
@@ -63,7 +73,12 @@ fn smooth_once(g: &Geometry) -> Geometry {
         )),
         Geometry::MultiPolygon(mp) => Geometry::MultiPolygon(MultiPolygon(
             mp.0.iter()
-                .map(|p| Polygon::new(chaikin_ring(p.exterior()), p.interiors().iter().map(chaikin_ring).collect()))
+                .map(|p| {
+                    Polygon::new(
+                        chaikin_ring(p.exterior()),
+                        p.interiors().iter().map(chaikin_ring).collect(),
+                    )
+                })
                 .collect(),
         )),
         Geometry::LineString(ls) => {
@@ -73,8 +88,14 @@ fn smooth_once(g: &Geometry) -> Geometry {
             }
             let mut out = vec![pts[0]];
             for w in pts.windows(2) {
-                out.push(Coord { x: 0.75 * w[0].x + 0.25 * w[1].x, y: 0.75 * w[0].y + 0.25 * w[1].y });
-                out.push(Coord { x: 0.25 * w[0].x + 0.75 * w[1].x, y: 0.25 * w[0].y + 0.75 * w[1].y });
+                out.push(Coord {
+                    x: 0.75 * w[0].x + 0.25 * w[1].x,
+                    y: 0.75 * w[0].y + 0.25 * w[1].y,
+                });
+                out.push(Coord {
+                    x: 0.25 * w[0].x + 0.75 * w[1].x,
+                    y: 0.25 * w[0].y + 0.75 * w[1].y,
+                });
             }
             out.push(*pts.last().unwrap());
             Geometry::LineString(LineString(out))
@@ -118,7 +139,11 @@ pub fn mask(polygon: &Geometry, mask_polygon: &Geometry) -> Result<MultiPolygon>
 /// Does the exterior ring turn both ways (i.e. is the polygon concave)?
 pub fn boolean_concave(polygon: &Polygon) -> bool {
     let pts = &polygon.exterior().0;
-    let n = if pts.first() == pts.last() { pts.len() - 1 } else { pts.len() };
+    let n = if pts.first() == pts.last() {
+        pts.len() - 1
+    } else {
+        pts.len()
+    };
     if n < 4 {
         return false;
     }
@@ -170,7 +195,10 @@ pub fn center_mean(points: &[Coord], weights: Option<&[f64]>) -> Option<Coord> {
         sum.y += p.y * w;
         total += w;
     }
-    (total != 0.0).then(|| Coord { x: sum.x / total, y: sum.y / total })
+    (total != 0.0).then(|| Coord {
+        x: sum.x / total,
+        y: sum.y / total,
+    })
 }
 
 /// Geometric median (the point minimising total distance), solved with
@@ -203,7 +231,10 @@ pub fn center_median(points: &[Coord], weights: Option<&[f64]>, tolerance_m: f64
         if den == 0.0 {
             break;
         }
-        let next = Coord { x: nx / den, y: ny / den };
+        let next = Coord {
+            x: nx / den,
+            y: ny / den,
+        };
         let step = (next.x - cur.x).hypot(next.y - cur.y);
         cur = next;
         if step < tolerance_m.max(1e-6) {
@@ -240,8 +271,14 @@ pub fn bezier_spline(line: &LineString, sharpness: f64, resolution: usize) -> Re
         let (p1, p2) = (p[i], p[i + 1]);
         let p3 = if i + 2 < n { p[i + 2] } else { p[n - 1] };
         // Catmull–Rom control points scaled by the sharpness
-        let c1 = Coord { x: p1.x + (p2.x - p0.x) * s / 6.0, y: p1.y + (p2.y - p0.y) * s / 6.0 };
-        let c2 = Coord { x: p2.x - (p3.x - p1.x) * s / 6.0, y: p2.y - (p3.y - p1.y) * s / 6.0 };
+        let c1 = Coord {
+            x: p1.x + (p2.x - p0.x) * s / 6.0,
+            y: p1.y + (p2.y - p0.y) * s / 6.0,
+        };
+        let c2 = Coord {
+            x: p2.x - (p3.x - p1.x) * s / 6.0,
+            y: p2.y - (p3.y - p1.y) * s / 6.0,
+        };
         for k in 0..res {
             let t = k as f64 / res as f64;
             let mt = 1.0 - t;
@@ -432,7 +469,11 @@ pub fn polygonize(geoms: &[Geometry]) -> Result<MultiPolygon> {
 
 fn shoelace(ring: &LineString) -> f64 {
     let pts = &ring.0;
-    let n = if pts.first() == pts.last() { pts.len() - 1 } else { pts.len() };
+    let n = if pts.first() == pts.last() {
+        pts.len() - 1
+    } else {
+        pts.len()
+    };
     let mut sum = 0.0;
     for i in 0..n {
         let a = pts[i];
@@ -444,8 +485,8 @@ fn shoelace(ring: &LineString) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::densify::Edges;
     use super::*;
+    use crate::densify::Edges;
     use geo::{coord, line_string, polygon};
 
     #[test]
@@ -474,7 +515,9 @@ mod tests {
         // than affine, which leaves a ~1e-7 relative wobble in the lon/lat
         // ratio over an 11 km square.
         let ring = |g: &Geometry| -> Vec<Coord> {
-            let Geometry::Polygon(p) = g else { panic!("not a polygon") };
+            let Geometry::Polygon(p) = g else {
+                panic!("not a polygon")
+            };
             p.exterior().0.clone()
         };
         // shoelace about the first vertex: at lon 120 / lat 30 the raw form
@@ -495,11 +538,19 @@ mod tests {
 
         let s1 = polygon_smooth(&p, 1).unwrap();
         assert_eq!(ring(&s1).len(), 9, "one pass doubles the 4 corners");
-        assert!((shoelace(&ring(&s1)) / a0 - 7.0 / 8.0).abs() < 1e-6, "{}", shoelace(&ring(&s1)) / a0);
+        assert!(
+            (shoelace(&ring(&s1)) / a0 - 7.0 / 8.0).abs() < 1e-6,
+            "{}",
+            shoelace(&ring(&s1)) / a0
+        );
 
         let s2 = polygon_smooth(&p, 2).unwrap();
         assert_eq!(ring(&s2).len(), 17);
-        assert!((shoelace(&ring(&s2)) / a0 - 27.0 / 32.0).abs() < 1e-6, "{}", shoelace(&ring(&s2)) / a0);
+        assert!(
+            (shoelace(&ring(&s2)) / a0 - 27.0 / 32.0).abs() < 1e-6,
+            "{}",
+            shoelace(&ring(&s2)) / a0
+        );
 
         // corner cutting keeps the result inside the original square, up to the
         // sub-metre bulge between a lon/lat-straight edge and the plane chord
@@ -517,7 +568,9 @@ mod tests {
         // holes are smoothed too, and a line is returned untouched
         let holed = Geometry::Polygon(Polygon::new(
             LineString(ring(&p)),
-            vec![line_string![(x: 120.02, y: 30.02), (x: 120.05, y: 30.02), (x: 120.05, y: 30.05), (x: 120.02, y: 30.05), (x: 120.02, y: 30.02)]],
+            vec![
+                line_string![(x: 120.02, y: 30.02), (x: 120.05, y: 30.02), (x: 120.05, y: 30.05), (x: 120.02, y: 30.05), (x: 120.02, y: 30.02)],
+            ],
         ));
         let sh = polygon_smooth(&holed, 1).unwrap();
         let Geometry::Polygon(shp) = &sh else { panic!() };
@@ -530,7 +583,9 @@ mod tests {
         let (t1, t2) = polygon_tangents(coord! {x: 3.0, y: 0.5}, &Geometry::Polygon(square.clone())).unwrap();
         assert!((t1.y - t2.y).abs() > 0.5, "{t1:?} {t2:?}");
 
-        let big = Geometry::Polygon(polygon![(x: -1.0, y: -1.0), (x: 2.0, y: -1.0), (x: 2.0, y: 2.0), (x: -1.0, y: 2.0), (x: -1.0, y: -1.0)]);
+        let big = Geometry::Polygon(
+            polygon![(x: -1.0, y: -1.0), (x: 2.0, y: -1.0), (x: 2.0, y: 2.0), (x: -1.0, y: 2.0), (x: -1.0, y: -1.0)],
+        );
         let m = mask(&Geometry::Polygon(square.clone()), &big).unwrap();
         assert_eq!(m.0.len(), 1);
         assert_eq!(m.0[0].interiors().len(), 1);

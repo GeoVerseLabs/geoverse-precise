@@ -371,7 +371,10 @@ pub fn self_intersections(g: &Geometry) -> Vec<Coord> {
                     continue;
                 }
                 match line_intersection(lines[i], lines[j]) {
-                    Some(LineIntersection::SinglePoint { intersection, is_proper: true }) => push(intersection),
+                    Some(LineIntersection::SinglePoint {
+                        intersection,
+                        is_proper: true,
+                    }) => push(intersection),
                     Some(LineIntersection::Collinear { intersection }) => {
                         push(intersection.start);
                         push(intersection.end);

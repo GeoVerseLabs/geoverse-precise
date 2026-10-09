@@ -105,7 +105,10 @@ pub fn destination(origin: Coord, dist_m: f64, bearing_deg: f64) -> Coord {
     if ca.abs() < 1e-12 {
         // pure east/west: stay on the parallel
         let dlon = dist_m * sa.signum() / (normal_radius(lat1) * lat1.cos());
-        return Coord { x: normalize_deg(origin.x + dlon.to_degrees()), y: origin.y };
+        return Coord {
+            x: normalize_deg(origin.x + dlon.to_degrees()),
+            y: origin.y,
+        };
     }
     // solve meridian_arc(lat1, lat2) = dist * cos(alpha) for lat2
     let target = dist_m * ca;
@@ -115,7 +118,10 @@ pub fn destination(origin: Coord, dist_m: f64, bearing_deg: f64) -> Coord {
         let d = meridional_radius(lat2);
         let step = f / d;
         lat2 -= step;
-        lat2 = lat2.clamp(-std::f64::consts::FRAC_PI_2 + 1e-12, std::f64::consts::FRAC_PI_2 - 1e-12);
+        lat2 = lat2.clamp(
+            -std::f64::consts::FRAC_PI_2 + 1e-12,
+            std::f64::consts::FRAC_PI_2 - 1e-12,
+        );
         if step.abs() < 1e-14 {
             break;
         }

@@ -11,8 +11,8 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::api::{
-    feature_out, for_each_feature, geometries_in, geometry_in, multipolygon_to_geom,
-    points_feature_collection, units, Io,
+    feature_out, for_each_feature, geometries_in, geometry_in, multipolygon_to_geom, points_feature_collection, units,
+    Io,
 };
 use crate::densify::Edges;
 use crate::geojson_util as gju;
@@ -101,7 +101,11 @@ fn ext_edges(o: &ExtOptions) -> Result<Edges> {
 }
 
 fn fc(features: Vec<Feature>) -> GeoJson {
-    GeoJson::FeatureCollection(FeatureCollection { bbox: None, features, foreign_members: None })
+    GeoJson::FeatureCollection(FeatureCollection {
+        bbox: None,
+        features,
+        foreign_members: None,
+    })
 }
 
 fn props_of(v: Value) -> Option<JsonObject> {
@@ -128,7 +132,9 @@ fn z_of(props: &Option<JsonObject>, name: Option<&str>) -> Result<f64> {
         Some(n) => vec![n],
         None => vec!["elevation", "z", "value"],
     };
-    let p = props.as_ref().ok_or_else(|| Error::InvalidArgument("feature has no properties".into()))?;
+    let p = props
+        .as_ref()
+        .ok_or_else(|| Error::InvalidArgument("feature has no properties".into()))?;
     for n in &names {
         if let Some(v) = p.get(*n) {
             if let Some(f) = v.as_f64() {
@@ -216,7 +222,11 @@ pub fn rhumb_bearing(x1: f64, y1: f64, x2: f64, y2: f64, final_bearing: bool, cr
     let (a, b) = (io.pt_in(x1, y1)?, io.pt_in(x2, y2)?);
     // a rhumb line holds one bearing end to end, so the final bearing is the
     // reverse of the bearing measured the other way
-    Ok(if final_bearing { crate::geodesic::normalize_deg(rhumb::bearing(b, a) + 180.0) } else { rhumb::bearing(a, b) })
+    Ok(if final_bearing {
+        crate::geodesic::normalize_deg(rhumb::bearing(b, a) + 180.0)
+    } else {
+        rhumb::bearing(a, b)
+    })
 }
 
 pub fn rhumb_destination(x: f64, y: f64, dist: f64, bearing: f64, units_s: &str, crs_s: &str) -> Result<[f64; 2]> {
@@ -323,7 +333,11 @@ fn grid_options(o: &ExtOptions) -> Result<GridOptions> {
     let u = ext_units(o)?;
     let w = u.to_meters(o.cell_width.unwrap_or(1.0));
     let h = u.to_meters(o.cell_height.unwrap_or(o.cell_width.unwrap_or(1.0)));
-    Ok(GridOptions { width_m: w, height_m: h, mask_all_touched: true })
+    Ok(GridOptions {
+        width_m: w,
+        height_m: h,
+        mask_all_touched: true,
+    })
 }
 
 pub fn grid(bbox: &[f64], options: &str) -> Result<String> {
@@ -467,8 +481,7 @@ pub fn center_mean(geojson: &str, options: &str) -> Result<String> {
     let o = ext_opts(options)?;
     let io = ext_io(&o)?;
     let (pts, w) = weights_of(&io, geojson, o.weight_property.as_deref())?;
-    let c = shapes::center_mean(&pts, w.as_deref())
-        .ok_or_else(|| Error::InvalidArgument("no points".into()))?;
+    let c = shapes::center_mean(&pts, w.as_deref()).ok_or_else(|| Error::InvalidArgument("no points".into()))?;
     feature_out(&io, &Geometry::Point(Point(c)), o.properties.clone())
 }
 
@@ -839,7 +852,10 @@ pub fn collect(polygons: &str, points: &str, in_property: &str, out_property: &s
             .filter(|(c, _)| prepared.contains_point(*c, false))
             .filter_map(|(_, p)| p.as_ref().and_then(|m| m.get(in_property)).cloned())
             .collect();
-        feats.push(gju::feature(g, with_props(props.clone(), json!({ out_property: values }))));
+        feats.push(gju::feature(
+            g,
+            with_props(props.clone(), json!({ out_property: values })),
+        ));
         Ok(())
     })?;
     io.doc_out(fc(feats))

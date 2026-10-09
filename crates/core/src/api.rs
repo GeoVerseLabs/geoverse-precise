@@ -802,7 +802,10 @@ pub fn reshape(geojson: &str, kind: &str, options: &str) -> Result<String> {
     }
 }
 
-pub(crate) fn for_each_feature(gj: &GeoJson, mut f: impl FnMut(&Geometry, Option<JsonObject>) -> Result<()>) -> Result<()> {
+pub(crate) fn for_each_feature(
+    gj: &GeoJson,
+    mut f: impl FnMut(&Geometry, Option<JsonObject>) -> Result<()>,
+) -> Result<()> {
     match gj {
         GeoJson::Geometry(g) => f(&gju::value_to_geo(&g.value)?, None),
         GeoJson::Feature(feat) => match &feat.geometry {

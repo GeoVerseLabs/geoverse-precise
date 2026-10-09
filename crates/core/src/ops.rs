@@ -63,7 +63,11 @@ pub fn coords_of_no_wrap(g: &Geometry) -> Vec<Coord> {
 
 fn push_ring(r: &LineString, out: &mut Vec<Coord>, exclude_wrap: bool) {
     let cs = &r.0;
-    let n = if exclude_wrap && cs.len() > 1 && cs.first() == cs.last() { cs.len() - 1 } else { cs.len() };
+    let n = if exclude_wrap && cs.len() > 1 && cs.first() == cs.last() {
+        cs.len() - 1
+    } else {
+        cs.len()
+    };
     out.extend(cs[..n].iter().copied());
 }
 
@@ -80,10 +84,10 @@ fn push_coords(g: &Geometry, out: &mut Vec<Coord>, exclude_wrap: bool) {
                 push_ring(r, out, exclude_wrap);
             }
         }
-        Geometry::MultiPolygon(mp) => mp
-            .0
-            .iter()
-            .for_each(|p| push_coords(&Geometry::Polygon(p.clone()), out, exclude_wrap)),
+        Geometry::MultiPolygon(mp) => {
+            mp.0.iter()
+                .for_each(|p| push_coords(&Geometry::Polygon(p.clone()), out, exclude_wrap))
+        }
         Geometry::Rect(r) => push_coords(&Geometry::Polygon(r.to_polygon()), out, exclude_wrap),
         Geometry::Triangle(t) => push_coords(&Geometry::Polygon(t.to_polygon()), out, exclude_wrap),
         Geometry::GeometryCollection(gc) => gc.0.iter().for_each(|g| push_coords(g, out, exclude_wrap)),

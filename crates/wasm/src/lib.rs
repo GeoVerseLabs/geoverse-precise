@@ -467,7 +467,9 @@ pub fn rhumb_bearing(x1: f64, y1: f64, x2: f64, y2: f64, final_bearing: bool, cr
 
 #[wasm_bindgen(js_name = rhumbDestination)]
 pub fn rhumb_destination(x: f64, y: f64, dist: f64, bearing: f64, units: &str, crs: &str) -> R<Vec<f64>> {
-    ext::rhumb_destination(x, y, dist, bearing, units, crs).map(|p| p.to_vec()).map_err(e)
+    ext::rhumb_destination(x, y, dist, bearing, units, crs)
+        .map(|p| p.to_vec())
+        .map_err(e)
 }
 
 #[wasm_bindgen(js_name = lineSegment)]

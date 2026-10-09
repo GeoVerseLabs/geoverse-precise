@@ -115,7 +115,9 @@ pub fn moran_index(points: &[Coord], values: &[f64], o: &WeightOptions) -> Resul
     let dev: Vec<f64> = values.iter().map(|v| v - mean).collect();
     let denom: f64 = dev.iter().map(|d| d * d).sum();
     if denom <= 0.0 {
-        return Err(Error::InvalidArgument("every value is identical, so I is undefined".into()));
+        return Err(Error::InvalidArgument(
+            "every value is identical, so I is undefined".into(),
+        ));
     }
     let mut num = 0.0;
     let mut s0 = 0.0;
@@ -175,8 +177,7 @@ fn erf(x: f64) -> f64 {
     let x = x.abs();
     let t = 1.0 / (1.0 + 0.327_591_1 * x);
     let y = 1.0
-        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t
-            + 0.254_829_592)
+        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592)
             * t
             * (-x * x).exp();
     sign * y
@@ -261,12 +262,11 @@ pub fn quadrat_analysis(
     if expected <= 0.0 {
         return Err(Error::InvalidArgument("no points fall inside the study area".into()));
     }
-    let variance = counts
+    let variance = counts.iter().map(|c| (*c as f64 - expected).powi(2)).sum::<f64>() / (q as f64 - 1.0);
+    let chi = counts
         .iter()
-        .map(|c| (*c as f64 - expected).powi(2))
-        .sum::<f64>()
-        / (q as f64 - 1.0);
-    let chi = counts.iter().map(|c| (*c as f64 - expected).powi(2) / expected).sum::<f64>();
+        .map(|c| (*c as f64 - expected).powi(2) / expected)
+        .sum::<f64>();
     let dof = q - 1;
     let critical = chi2_critical_95(dof);
     Ok(QuadratResult {
@@ -312,7 +312,11 @@ pub fn tesselate(polygon: &Polygon) -> Result<Vec<Polygon>> {
 
     for ring in &rings {
         let pts = &ring.0;
-        let n = if pts.first() == pts.last() { pts.len() - 1 } else { pts.len() };
+        let n = if pts.first() == pts.last() {
+            pts.len() - 1
+        } else {
+            pts.len()
+        };
         if n < 3 {
             continue;
         }
@@ -390,7 +394,11 @@ mod tests {
         // 1.2 km reaches the four rook neighbours but not the diagonals at 1.414 km
         let raw = distance_weight(
             &pts,
-            &WeightOptions { threshold_m: 1_200.0, standardization: Standardization::Raw, ..Default::default() },
+            &WeightOptions {
+                threshold_m: 1_200.0,
+                standardization: Standardization::Raw,
+                ..Default::default()
+            },
         )
         .unwrap();
         // binary weights: the four corners have 2 neighbours each
@@ -400,7 +408,11 @@ mod tests {
         // widen past the diagonal and the corner gains its third neighbour
         let wide = distance_weight(
             &pts,
-            &WeightOptions { threshold_m: 1_500.0, standardization: Standardization::Raw, ..Default::default() },
+            &WeightOptions {
+                threshold_m: 1_500.0,
+                standardization: Standardization::Raw,
+                ..Default::default()
+            },
         )
         .unwrap();
         assert_eq!(wide[0].iter().sum::<f64>(), 3.0);
@@ -412,14 +424,25 @@ mod tests {
             }
         }
 
-        let rowed = distance_weight(&pts, &WeightOptions { threshold_m: 1_200.0, ..Default::default() }).unwrap();
+        let rowed = distance_weight(
+            &pts,
+            &WeightOptions {
+                threshold_m: 1_200.0,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         for row in &rowed {
             let s: f64 = row.iter().sum();
             assert!((s - 1.0).abs() < 1e-12, "{s}");
         }
 
         // distance decay puts more weight on the nearer neighbour
-        let two = vec![coord! {x: 120.0, y: 30.0}, coord! {x: 120.005, y: 30.0}, coord! {x: 120.02, y: 30.0}];
+        let two = vec![
+            coord! {x: 120.0, y: 30.0},
+            coord! {x: 120.005, y: 30.0},
+            coord! {x: 120.02, y: 30.0},
+        ];
         let decay = distance_weight(
             &two,
             &WeightOptions {
@@ -439,7 +462,10 @@ mod tests {
         let pts = lattice(n, 1_000.0);
         // rook neighbours only: at 1.5 km the diagonals would join in, and in a
         // checkerboard those carry the *same* value, which cancels the signal
-        let opts = WeightOptions { threshold_m: 1_200.0, ..Default::default() };
+        let opts = WeightOptions {
+            threshold_m: 1_200.0,
+            ..Default::default()
+        };
 
         // a smooth west-to-east ramp: neighbouring values are alike
         let ramp: Vec<f64> = (0..n * n).map(|k| (k % n) as f64).collect();
@@ -460,7 +486,15 @@ mod tests {
 
         // Widening to the diagonals halves the checkerboard's neighbour signal,
         // because a diagonal neighbour shares the value: I collapses toward 0.
-        let with_diagonals = moran_index(&pts, &checker, &WeightOptions { threshold_m: 1_500.0, ..Default::default() }).unwrap();
+        let with_diagonals = moran_index(
+            &pts,
+            &checker,
+            &WeightOptions {
+                threshold_m: 1_500.0,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         assert!(
             with_diagonals.moran_index.abs() < 0.2,
             "diagonals should cancel the signal, got {}",
@@ -484,9 +518,7 @@ mod tests {
 
         // everything in one corner is unmistakably clustered
         let origin = coord! {x: 120.0, y: 30.0};
-        let mut clumped: Vec<Coord> = (0..100)
-            .map(|k| go(origin, 3.6 * k as f64, 100.0))
-            .collect();
+        let mut clumped: Vec<Coord> = (0..100).map(|k| go(origin, 3.6 * k as f64, 100.0)).collect();
         clumped.push(go(origin, 45.0, 30_000.0)); // stretch the extent
         let c = quadrat_analysis(&clumped, None, 4, 4).unwrap();
         assert!(c.variance_mean_ratio > 5.0, "{}", c.variance_mean_ratio);
@@ -530,7 +562,10 @@ mod tests {
         // nothing lands in the hole
         for t in &tris {
             let c = ops::vertex_centroid(std::slice::from_ref(&Geometry::Polygon(t.clone()))).unwrap();
-            assert!(predicates::point_in_polygon(c, &Geometry::Polygon(p.clone()), false), "{c:?}");
+            assert!(
+                predicates::point_in_polygon(c, &Geometry::Polygon(p.clone()), false),
+                "{c:?}"
+            );
         }
 
         // a convex triangle needs exactly one triangle
