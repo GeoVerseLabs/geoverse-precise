@@ -12,9 +12,10 @@
 *.md    text eol=lf
 *.py    text eol=lf
 
-# 锁文件：不做文本合并，冲突时重新生成
-Cargo.lock        -diff merge=binary linguist-generated
-package-lock.json -diff merge=binary linguist-generated
+# 锁文件：保留文本 diff（便于审查 Dependabot 的版本与校验和变化），
+# 在 GitHub PR 中默认折叠；不做文本合并，冲突时重新生成
+Cargo.lock        merge=binary linguist-generated
+package-lock.json merge=binary linguist-generated
 
 # 基准数据：体积大、机器生成，diff 无意义
 bench/fixtures/*.json -diff linguist-generated
