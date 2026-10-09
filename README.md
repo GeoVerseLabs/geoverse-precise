@@ -157,6 +157,26 @@ turf 逐函数行为对照（输出 `bench/out/parity.json`）：
 cd bench && node turf-parity.mjs
 ```
 
+## 版本管理
+
+- 版本号以 `Cargo.toml`（`[workspace.package] version`）与 `packages/geoprecise/package.json` 为准，两处保持一致；
+  发布时打附注 tag `vX.Y.Z`，变更记录写进 [CHANGELOG.md](CHANGELOG.md)。
+  文档里的 v1 / v1.1 / v1.2 是历史里程碑名称，对应 0.1.0 / 0.2.0 / 0.3.0。
+- 分支：`main` 保持可构建、测试全绿；新功能在 `feat/<名称>`、修复在 `fix/<名称>` 上开发后合入。
+- 提交信息采用 `类型: 说明` 格式（`feat` / `fix` / `perf` / `docs` / `test` / `refactor` / `style` / `chore`）。
+- **构建产物不入库**：`packages/geoprecise/dist/`、`packages/geoprecise/wasm/`、`examples/web-demo/dist/`
+  都由源码生成（见上文「构建」）；v0.3.0 的预编译产物保存在交付包 `geoprecise-v0.3.0_1.zip` 中。
+- 提交前检查：
+
+  ```bash
+  cargo fmt --all -- --check
+  cargo clippy --workspace
+  cargo test -p geoprecise-core
+  cd packages/geoprecise && npm run build && npm test
+  ```
+
+- 纯格式化提交登记在 `.git-blame-ignore-revs`，执行一次 `git config blame.ignoreRevsFile .git-blame-ignore-revs` 即可让 `git blame` 跳过它们。
+
 ## 许可
 
 MIT OR Apache-2.0
