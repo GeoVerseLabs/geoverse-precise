@@ -412,7 +412,7 @@ impl Prepared {
 
     /// Batch containment. `coords` is interleaved lon/lat.
     pub fn contains_points(&self, coords: &[f64], ignore_boundary: bool, out: &mut [u8]) {
-        for (i, c) in coords.chunks_exact(2).enumerate() {
+        for (i, c) in coords.as_chunks::<2>().0.iter().enumerate() {
             if i >= out.len() {
                 break;
             }
@@ -422,7 +422,7 @@ impl Prepared {
 
     /// Batch nearest point: writes `[lon, lat, dist, location, index, part]` per query.
     pub fn nearest_batch(&self, coords: &[f64], out: &mut [f64]) {
-        for (i, c) in coords.chunks_exact(2).enumerate() {
+        for (i, c) in coords.as_chunks::<2>().0.iter().enumerate() {
             let o = i * 6;
             if o + 6 > out.len() {
                 break;

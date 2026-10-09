@@ -320,7 +320,9 @@ pub fn distance_batch(pairs: &[f64], units_s: &str, crs_s: &str) -> Result<Vec<f
         return Err(Error::InvalidArgument("expected [x1, y1, x2, y2, …]".into()));
     }
     pairs
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .map(|c| {
             let a = io.pt_in(c[0], c[1])?;
             let b = io.pt_in(c[2], c[3])?;
@@ -335,7 +337,9 @@ pub fn distance_to_batch(x: f64, y: f64, coords: &[f64], units_s: &str, crs_s: &
     let u = units(units_s)?;
     let origin = io.pt_in(x, y)?;
     coords
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|c| {
             let p = io.pt_in(c[0], c[1])?;
             Ok(u.from_meters(measure::distance(origin, p)))
@@ -351,7 +355,7 @@ pub fn destination_batch(rows: &[f64], units_s: &str, crs_s: &str) -> Result<Vec
         return Err(Error::InvalidArgument("expected [x, y, distance, bearing, …]".into()));
     }
     let mut out = Vec::with_capacity(rows.len() / 2);
-    for c in rows.chunks_exact(4) {
+    for c in rows.as_chunks::<4>().0.iter() {
         let p = io.pt_in(c[0], c[1])?;
         let d = measure::destination(p, u.to_meters(c[2]), c[3]);
         let r = io.pt_out(d);

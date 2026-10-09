@@ -36,6 +36,7 @@
 ### 变更
 - 全部 Rust 源码按 `rustfmt.toml` 统一格式化（纯格式，无逻辑改动；`cargo test` 结果不变）。
 - 新增本更新日志；README 增加「版本管理」一节。
+- 批量接口中固定步长的 `chunks_exact(N)` 改为 `as_chunks::<N>()`（行为不变；消除 Rust 1.99 clippy 新增的 `chunks_exact_with_const_size` 告警）。
 - Cargo 与 npm 清单补充 `repository` / `homepage` / `bugs` 等元数据；npm 包内附带许可证文件。
 
 ### 新增

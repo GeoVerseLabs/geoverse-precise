@@ -227,7 +227,9 @@ impl PreparedGeometry {
     #[wasm_bindgen(js_name = containsPoints)]
     pub fn contains_points(&self, coords: &[f64], ignore_boundary: bool) -> Vec<u8> {
         coords
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|c| {
                 u8::from(
                     self.inner
@@ -260,7 +262,7 @@ impl PreparedGeometry {
     #[wasm_bindgen(js_name = nearestBatch)]
     pub fn nearest_batch(&self, coords: &[f64]) -> Vec<f64> {
         let mut out = Vec::with_capacity(coords.len() * 3);
-        for c in coords.chunks_exact(2) {
+        for c in coords.as_chunks::<2>().0.iter() {
             match self.inner.prepared.nearest(self.inner.point_in(c[0], c[1])) {
                 Some(n) => {
                     let p = self.inner.point_out(n.point);
@@ -283,7 +285,9 @@ impl PreparedGeometry {
     #[wasm_bindgen(js_name = distanceBatch)]
     pub fn distance_batch(&self, coords: &[f64]) -> Vec<f64> {
         coords
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|c| self.inner.prepared.distance_to(self.inner.point_in(c[0], c[1])) / self.units)
             .collect()
     }
@@ -293,7 +297,9 @@ impl PreparedGeometry {
     pub fn points_within(&self, coords: &[f64], radius: f64) -> Vec<u32> {
         let r = radius * self.units;
         coords
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .enumerate()
             .filter(|(_, c)| self.inner.prepared.distance_to(self.inner.point_in(c[0], c[1])) <= r)
             .map(|(i, _)| i as u32)
