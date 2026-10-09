@@ -53,7 +53,7 @@ jobs:
       - name: cargo clippy -D warnings（结果转为注释）
         run: |
           set +e
-          cargo clippy --workspace --all-targets --message-format=short -- -D warnings > clippy.txt 2>&1
+          cargo clippy --color never --workspace --all-targets --message-format=short -- -D warnings > clippy.txt 2>&1
           code=$?
           cat clippy.txt
           echo "::notice::$(rustc --version) / clippy exit code ${code}"
