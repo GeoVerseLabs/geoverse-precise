@@ -44,6 +44,10 @@
     "buffer"
   ],
   "license": "MIT OR Apache-2.0",
+  "author": "GeoVerseLabs",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "@types/geojson": "^7946.0.16",
     "@types/node": "^22.0.0",

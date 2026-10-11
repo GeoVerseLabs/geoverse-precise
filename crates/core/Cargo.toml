@@ -9,6 +9,8 @@ repository.workspace = true
 homepage.workspace = true
 authors.workspace = true
 readme = "../../README.md"
+# 对照测试依赖仓库根目录的 bench/fixtures，不随 crate 发布
+exclude = ["tests/reference.rs"]
 keywords = ["gis", "geodesic", "geospatial", "cgcs2000", "gcj02"]
 categories = ["science::geo", "mathematics"]
 
