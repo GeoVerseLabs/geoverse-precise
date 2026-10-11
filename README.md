@@ -1,7 +1,10 @@
 # geoverse-precise
 
 [![CI](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml/badge.svg)](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/GeoVerseLabs/geoverse-precise?sort=semver)](https://github.com/GeoVerseLabs/geoverse-precise/releases)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#许可)
+
+[在线演示](https://geoverselabs.github.io/geoverse-precise/)：turf 与 geoverse-precise 的缓冲区叠加对比，可切换高德底图。
 
 > Ellipsoid-accurate spatial analysis for the browser, written in Rust and compiled to WebAssembly.
 > A drop-in replacement for turf.js (all 184 exports) with WGS84 geodesics and China CRS support (CGCS2000 / GCJ-02 / BD-09).
@@ -26,13 +29,14 @@ Rust 编写、编译为 WebAssembly 的**椭球精度**客户端空间分析库�
 
 ## 安装
 
-尚未发布到 npm。可以从 [Releases](https://github.com/GeoVerseLabs/geoverse-precise/releases) 下载预编译的 npm 包后安装：
+尚未发布到 npm。每个版本的预编译 npm 包附在 [Releases](https://github.com/GeoVerseLabs/geoverse-precise/releases) 中，可直接按地址安装：
 
 ```bash
-npm install ./geoverse-precise-X.Y.Z.tgz
-# 或直接引用 Release 附件地址
-npm install https://github.com/GeoVerseLabs/geoverse-precise/releases/download/vX.Y.Z/geoverse-precise-X.Y.Z.tgz
+npm install https://github.com/GeoVerseLabs/geoverse-precise/releases/download/v0.4.0/geoverse-precise-0.4.0.tgz
 ```
+
+纯 ESM 包，需要 Node.js ≥ 20，或支持 `new URL('…wasm', import.meta.url)` 的打包工具（Vite、webpack 5、Rollup、esbuild）。
+附件的 SHA256 见同一 Release 的 `SHA256SUMS.txt`，构建来源证明可用 `gh attestation verify <tgz> -R GeoVerseLabs/geoverse-precise` 校验。
 
 也可以从源码构建（见下文「构建」）。每次 CI 运行也会产出 npm 包，在对应 Actions 运行页的 Artifacts 中下载。
 
