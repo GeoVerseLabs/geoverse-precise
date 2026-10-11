@@ -46,7 +46,7 @@
   "license": "MIT OR Apache-2.0",
   "author": "GeoVerseLabs",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.16",

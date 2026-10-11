@@ -150,7 +150,7 @@ scripts              build-wasm.sh（cargo → wasm-bindgen → wasm-opt）
 
 ## 构建
 
-依赖：Rust ≥ 1.88、`wasm32-unknown-unknown` target、与 `crates/wasm/Cargo.toml` 同版本的 `wasm-bindgen-cli`、Node ≥ 18；可选 binaryen ≥ 116（`wasm-opt`；更老的版本会把 externref 表重编号而不修正导出，构建脚本会自动跳过）。
+依赖：Rust ≥ 1.88、`wasm32-unknown-unknown` target、与 `crates/wasm/Cargo.toml` 同版本的 `wasm-bindgen-cli`、Node ≥ 20；可选 binaryen ≥ 116（`wasm-opt`；更老的版本会把 externref 表重编号而不修正导出，构建脚本会自动跳过）。
 
 ```bash
 rustup target add wasm32-unknown-unknown

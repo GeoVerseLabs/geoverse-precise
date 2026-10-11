@@ -16,7 +16,7 @@ Prebuilt packages are attached to each [GitHub Release](https://github.com/GeoVe
 npm install https://github.com/GeoVerseLabs/geoverse-precise/releases/download/v0.4.0/geoverse-precise-0.4.0.tgz
 ```
 
-ESM only. Node.js ≥ 18, or any bundler that handles `new URL('…wasm', import.meta.url)` (Vite, webpack 5, Rollup, esbuild).
+ESM only. Node.js ≥ 20, or any bundler that handles `new URL('…wasm', import.meta.url)` (Vite, webpack 5, Rollup, esbuild).
 
 ## Usage
 
