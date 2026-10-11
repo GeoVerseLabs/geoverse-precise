@@ -7,7 +7,7 @@
 | Rust | ≥ 1.88（`rust-toolchain` 用 stable 即可） | 核心库与 wasm 导出 |
 | `wasm32-unknown-unknown` target | — | `rustup target add wasm32-unknown-unknown` |
 | `wasm-bindgen-cli` | **0.2.128**，必须与 `crates/wasm/Cargo.toml` 一致 | `cargo install wasm-bindgen-cli --version 0.2.128 --locked` |
-| Node.js | ≥ 18（CI 用 22） | TS 封装、测试、基准 |
+| Node.js | ≥ 20（CI 用 22，并在 20 / 24 上复测） | TS 封装、测试、基准 |
 | binaryen（可选） | ≥ 116 | `wasm-opt` 体积优化；更老的版本构建脚本会自动跳过 |
 | Python（可选） | 3.10+，`geographiclib pyproj numpy` | 重新生成基准数据、复核缓冲区 |
 
@@ -54,25 +54,37 @@ cd packages/geoverse-precise && npm run build && npm test
 
 ## 发布
 
-1. 在 `CHANGELOG.md` 中把 `[Unreleased]` 改为 `[X.Y.Z] - 日期`，并新建空的 `[Unreleased]`；
-2. 同步修改版本号：`Cargo.toml`（`[workspace.package] version`）与 `packages/geoverse-precise/package.json`；
-3. 提交：`chore: release vX.Y.Z`；
-4. 打附注标签并推送：
+`main` 受分支规则保护，所有改动（包括发版提交）都通过 PR 合入。
+
+1. 新建分支 `release/vX.Y.Z`，在其中：
+   - 把 `CHANGELOG.md` 的 `[Unreleased]` 整理为 `## [X.Y.Z] - YYYY-MM-DD`，并新建空的 `[Unreleased]`；
+   - 同步版本号：`Cargo.toml`（`[workspace.package] version`）与 `packages/geoverse-precise/package.json`，
+     然后执行 `cargo check` 与 `cd packages/geoverse-precise && npm install --package-lock-only` 更新两个锁文件；
+   - 提交 `chore(release): vX.Y.Z`，推送并发 PR，CI 全绿后合并。
+2. **演练**：Actions → Release → Run workflow，填入 `X.Y.Z`。演练会做完版本与 CHANGELOG 校验、
+   编译、测试、打包、`publint`，产物（`.tgz`、`SHA256SUMS.txt`、发布说明）作为 artifact 供下载检查，不创建 Release。
+3. 在合并后的 `main` 上打附注标签并推送：
 
    ```bash
+   git switch main && git pull --ff-only
    git tag -a vX.Y.Z -m "geoverse-precise vX.Y.Z"
-   git push origin main vX.Y.Z
+   git push origin vX.Y.Z
    ```
 
-5. `.github/workflows/release.yml` 会校验标签与两处版本号一致，重新编译 wasm、跑测试，
-   然后创建 GitHub Release，附上 npm 包（`.tgz`），说明取自 CHANGELOG 对应段落。
+4. 标签推送后自动执行：
+   - `release.yml`：重复第 2 步的全部校验与构建，为 `.tgz` 生成构建来源证明（attestation），
+     创建 GitHub Release，附 `.tgz` 与 `SHA256SUMS.txt`，说明取自 CHANGELOG 对应段落；
+     版本号带 `-`（如 `0.5.0-rc.1`）时标记为预发布。
+   - `demo.yml`：把演示页部署到 GitHub Pages（需在 Settings → Pages 中把 Source 设为 GitHub Actions）。
 
-目前不自动发布到 npm / crates.io。需要时在 release 之后手动执行 `npm publish` / `cargo publish`。
+目前不自动发布到 npm / crates.io。需要时在 Release 之后手动执行 `npm publish` / `cargo publish`；
+发布 crate 前注意 `geoverse-precise-core` 需带上许可证文本（目前只在仓库根目录）。
 
 ## 升级 wasm-bindgen
 
-`wasm-bindgen` 的库版本与 CLI 版本必须完全一致，因此 Dependabot 已忽略它，需手动同步修改三处：
+`wasm-bindgen` 的库版本与 CLI 版本必须完全一致，因此 Dependabot 已忽略它，需手动同步修改两处：
 
 - `crates/wasm/Cargo.toml` 中的 `wasm-bindgen = "=x.y.z"`
-- `.github/workflows/ci.yml` 与 `release.yml` 中的 `WASM_BINDGEN_VERSION`
-- 本文与 README「构建」一节中的安装命令
+- `.github/actions/build-wasm/action.yml` 中 `wasm-bindgen-version` 的默认值（CI / Release / Demo 共用；两处不一致时构建会直接报错）
+
+另外更新本文与 README「构建」一节中的安装命令。
