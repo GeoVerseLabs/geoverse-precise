@@ -1,5 +1,8 @@
 # geoverse-precise
 
+[![npm](https://img.shields.io/npm/v/@geoverse/geoverse-precise)](https://www.npmjs.com/package/@geoverse/geoverse-precise)
+[![CI](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml/badge.svg)](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml)
+
 Ellipsoid-accurate spatial analysis for the browser and Node.js, written in Rust and compiled to WebAssembly.
 A drop-in replacement for [turf.js](https://turfjs.org/) — all 184 turf exports exist under the same names —
 that measures on the WGS84 ellipsoid instead of a sphere and understands China's coordinate systems

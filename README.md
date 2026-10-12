@@ -1,6 +1,7 @@
 # geoverse-precise
 
 [![CI](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml/badge.svg)](https://github.com/GeoVerseLabs/geoverse-precise/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@geoverse/geoverse-precise)](https://www.npmjs.com/package/@geoverse/geoverse-precise)
 [![Release](https://img.shields.io/github/v/release/GeoVerseLabs/geoverse-precise?sort=semver)](https://github.com/GeoVerseLabs/geoverse-precise/releases)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#许可)
 
