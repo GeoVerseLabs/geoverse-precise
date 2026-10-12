@@ -1,0 +1,74 @@
+name: Demo
+
+# 把 examples/web-demo（turf 与 geoverse-precise 缓冲区对比页）部署到 GitHub Pages。
+# 前提：仓库 Settings → Pages → Source 选择 “GitHub Actions”。
+# 发版时由 release.yml 调用；也可在 Actions 页面手动运行。
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: 构建演示页
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/build-wasm
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            packages/geoverse-precise/package-lock.json
+            examples/web-demo/package-lock.json
+      - name: 编译 TS 封装
+        working-directory: packages/geoverse-precise
+        run: |
+          npm ci
+          npm run build
+      - uses: actions/configure-pages@v6
+        id: pages
+      - name: 构建演示页
+        working-directory: examples/web-demo
+        env:
+          DEMO_BASE: ${{ steps.pages.outputs.base_path }}/
+        run: |
+          npm ci
+          npm run build
+      - name: 冒烟测试（按 Pages 子路径访问）
+        working-directory: examples/web-demo
+        env:
+          DEMO_BASE: ${{ steps.pages.outputs.base_path }}/
+        run: |
+          npx vite preview --port 4173 --strictPort &
+          npm i --no-save --no-audit --no-fund playwright@1.64.0
+          npx playwright install --with-deps chromium
+          for i in $(seq 30); do curl -sf "http://localhost:4173${DEMO_BASE}" >/dev/null && break; sleep 1; done
+          node smoke.mjs "http://localhost:4173${DEMO_BASE}"
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: examples/web-demo/dist
+
+  deploy:
+    name: 部署到 GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

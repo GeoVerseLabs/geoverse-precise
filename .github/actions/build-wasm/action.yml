@@ -1,0 +1,34 @@
+name: 编译 wasm
+description: 安装 Rust（含 wasm32 target）与 wasm-bindgen-cli，执行 scripts/build-wasm.sh，产物输出到 packages/geoverse-precise/wasm
+
+inputs:
+  wasm-bindgen-version:
+    description: 必须与 crates/wasm/Cargo.toml 中锁定的 wasm-bindgen 版本一致（升级时只改这里和 Cargo.toml）
+    default: 0.2.128
+
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: wasm-bindgen-${{ inputs.wasm-bindgen-version }}
+    - name: 安装 wasm-bindgen-cli
+      shell: bash
+      env:
+        WASM_BINDGEN_VERSION: ${{ inputs.wasm-bindgen-version }}
+      run: |
+        locked=$(grep -E '^wasm-bindgen *= *"' crates/wasm/Cargo.toml | sed -E 's/.*"=?([^"]+)".*/\1/')
+        if [ "$locked" != "$WASM_BINDGEN_VERSION" ]; then
+          echo "::error file=crates/wasm/Cargo.toml::wasm-bindgen 锁定为 $locked，但 CLI 版本为 $WASM_BINDGEN_VERSION，请同步修改 .github/actions/build-wasm/action.yml"
+          exit 1
+        fi
+        if ! wasm-bindgen --version 2>/dev/null | grep -q " ${WASM_BINDGEN_VERSION}"; then
+          cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked --force
+        fi
+        wasm-bindgen --version
+    - name: 编译 wasm
+      shell: bash
+      run: ./scripts/build-wasm.sh

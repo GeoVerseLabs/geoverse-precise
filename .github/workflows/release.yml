@@ -1,54 +1,102 @@
 name: Release
 
-# 推送 vX.Y.Z 标签时：校验版本号一致 → 编译 wasm → 测试 → 打包 → 创建 GitHub Release 并附上预编译产物。
+# 三种触发方式：
+# - 合并到 main（推荐）：若 Cargo.toml 中的版本号还没有对应的 vX.Y.Z 标签，则校验 → 编译 → 测试 → 打包 →
+#   生成构建来源证明 → 创建标签与 GitHub Release（附 npm 包与校验和）→ 部署演示页。
+#   版本号已有标签时什么都不做，所以普通提交合并到 main 不会触发发版。
+# - 推送 vX.Y.Z 标签：同上，用于手动打标签发版。
+# - 手动运行（Actions → Release → Run workflow）：演练，只做到打包为止，产物作为 workflow artifact 下载。
 # 不自动发布到 npm / crates.io。
 on:
   push:
+    branches: [main]
     tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 演练的版本号（不带 v，如 0.4.0），须与 Cargo.toml / package.json / CHANGELOG 一致
+        required: true
 
 permissions:
-  contents: write
+  contents: read
+
+# 同一时间只跑一个发版流程，避免“合并到 main”与“推送标签”同时发同一个版本
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
-  WASM_BINDGEN_VERSION: 0.2.128
 
 jobs:
-  release:
+  plan:
+    name: 判断是否发版
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      build: ${{ steps.plan.outputs.build }}
+      publish: ${{ steps.plan.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: plan
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VER="${GITHUB_REF_NAME#v}"; BUILD=true; PUBLISH=true
+          elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            VER="${INPUT_VERSION#v}"; BUILD=true; PUBLISH=false
+          else
+            VER=$(grep -m1 -E '^version *= *"' Cargo.toml | sed -E 's/.*"(.*)".*/\1/')
+            if git ls-remote --exit-code --tags origin "refs/tags/v${VER}" >/dev/null; then
+              echo "::notice::v${VER} 已存在，本次合并不发版"
+              BUILD=false; PUBLISH=false
+            else
+              echo "::notice::main 上的版本 ${VER} 尚无标签，开始发版 v${VER}"
+              BUILD=true; PUBLISH=true
+            fi
+          fi
+          { echo "version=$VER"; echo "build=$BUILD"; echo "publish=$PUBLISH"; } | tee -a "$GITHUB_OUTPUT"
+
+  build:
+    name: 校验、编译与打包
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      prerelease: ${{ steps.ver.outputs.prerelease }}
     steps:
       - uses: actions/checkout@v7
 
-      - name: 校验标签与清单版本号一致
+      - name: 确定版本号并校验清单与 CHANGELOG
+        id: ver
+        env:
+          VER: ${{ needs.plan.outputs.version }}
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
           CARGO_VER=$(grep -m1 -E '^version *= *"' Cargo.toml | sed -E 's/.*"(.*)".*/\1/')
           NPM_VER=$(node -p "require('./packages/geoverse-precise/package.json').version")
-          echo "tag=$TAG cargo=$CARGO_VER npm=$NPM_VER"
-          if [ "$TAG" != "$CARGO_VER" ] || [ "$TAG" != "$NPM_VER" ]; then
-            echo "::error::标签 v$TAG 与 Cargo.toml ($CARGO_VER) / package.json ($NPM_VER) 不一致"
+          echo "version=$VER cargo=$CARGO_VER npm=$NPM_VER"
+          if [ "$VER" != "$CARGO_VER" ] || [ "$VER" != "$NPM_VER" ]; then
+            echo "::error::版本 $VER 与 Cargo.toml ($CARGO_VER) / package.json ($NPM_VER) 不一致"
             exit 1
           fi
-
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: wasm-bindgen-${{ env.WASM_BINDGEN_VERSION }}
-      - name: 安装 wasm-bindgen-cli
-        run: |
-          if ! wasm-bindgen --version 2>/dev/null | grep -q " ${WASM_BINDGEN_VERSION}"; then
-            cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked --force
+          if ! grep -qE "^## \[${VER//./\\.}\]" CHANGELOG.md; then
+            echo "::error file=CHANGELOG.md::缺少 \"## [$VER]\" 段落，请先把 [Unreleased] 整理为该版本"
+            exit 1
           fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          case "$VER" in *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;; *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;; esac
+
+      - uses: ./.github/actions/build-wasm
       - name: Rust 测试
         run: cargo test -p geoverse-precise-core --release
-      - name: 编译 wasm
-        run: ./scripts/build-wasm.sh
 
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: packages/geoverse-precise/package-lock.json
       - name: 编译、测试并打包 TS 封装
         working-directory: packages/geoverse-precise
         run: |
@@ -57,20 +105,100 @@ jobs:
           npm test
           cp ../../LICENSE-MIT ../../LICENSE-APACHE .
           npm pack
+          npx -y publint@0.3 --strict
 
-      - name: 从 CHANGELOG 提取本版本说明
+      - name: 整理发布产物与校验和
+        env:
+          VER: ${{ steps.ver.outputs.version }}
         run: |
-          VER="${GITHUB_REF_NAME#v}"
-          awk -v v="$VER" '
-            $0 ~ "^## \\[" v "\\]" {on=1; next}
-            on && /^## \[/ {exit}
-            on {print}
-          ' CHANGELOG.md > release-notes.md
-          [ -s release-notes.md ] || echo "见 CHANGELOG.md" > release-notes.md
+          mkdir -p release
+          cp "packages/geoverse-precise/geoverse-precise-${VER}.tgz" release/
+          (cd release && sha256sum -- * > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - name: 生成发布说明（取自 CHANGELOG）
+        env:
+          VER: ${{ steps.ver.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            awk -v v="$VER" '
+              $0 ~ "^## \\[" v "\\]" {on=1; next}
+              on && /^## \[/ {exit}
+              on {print}
+            ' CHANGELOG.md
+            echo
+            echo "## 安装"
+            echo
+            echo '```bash'
+            echo "npm install https://github.com/${REPO}/releases/download/v${VER}/geoverse-precise-${VER}.tgz"
+            echo '```'
+            echo
+            echo "附件的 SHA256 见 \`SHA256SUMS.txt\`；构建来源证明可用 \`gh attestation verify geoverse-precise-${VER}.tgz -R ${REPO}\` 校验。"
+          } > release-notes.md
           cat release-notes.md
 
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ steps.ver.outputs.version }}
+          path: |
+            release/
+            release-notes.md
+          retention-days: 30
+
+  publish:
+    name: 创建标签与 GitHub Release
+    needs: [plan, build]
+    if: needs.plan.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-${{ needs.build.outputs.version }}
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: release/*.tgz
       - uses: softprops/action-gh-release@v3
         with:
-          name: geoverse-precise ${{ github.ref_name }}
+          tag_name: v${{ needs.build.outputs.version }}
+          # 合并到 main 触发时标签尚不存在，按本次提交创建
+          target_commitish: ${{ github.sha }}
+          name: geoverse-precise v${{ needs.build.outputs.version }}
           body_path: release-notes.md
-          files: packages/geoverse-precise/*.tgz
+          prerelease: ${{ needs.build.outputs.prerelease == 'true' }}
+          files: |
+            release/*.tgz
+            release/SHA256SUMS.txt
+
+  pages-check:
+    name: 检查 GitHub Pages 是否已开启
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      pages: read
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" >/dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::GitHub Pages 未开启（Settings → Pages → Source 选 GitHub Actions），跳过演示页部署"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  demo:
+    name: 部署演示页
+    needs: pages-check
+    if: needs.pages-check.outputs.enabled == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/demo.yml

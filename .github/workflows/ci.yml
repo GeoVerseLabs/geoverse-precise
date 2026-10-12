@@ -15,8 +15,6 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  # 必须与 crates/wasm/Cargo.toml 中锁定的 wasm-bindgen 版本一致
-  WASM_BINDGEN_VERSION: 0.2.128
   # clippy 门禁使用的工具链（本地已验证 -D warnings 通过的版本）
   CLIPPY_TOOLCHAIN: 1.97.0
 
@@ -64,25 +62,27 @@ jobs:
             | sed -E 's/^(.*)$/::warning::\1/'
           exit "${code}"
 
+  msrv:
+    name: 最低 Rust 版本（MSRV）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: 读取 Cargo.toml 中的 rust-version
+        id: msrv
+        run: echo "version=$(grep -m1 -E '^rust-version *= *"' Cargo.toml | sed -E 's/.*"(.*)".*/\1/')" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo check（锁定依赖）
+        run: cargo check --workspace --all-targets --locked
+
   wasm:
     name: WASM + TypeScript 包
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: wasm-bindgen-${{ env.WASM_BINDGEN_VERSION }}
-      - name: 安装 wasm-bindgen-cli
-        run: |
-          if ! wasm-bindgen --version 2>/dev/null | grep -q " ${WASM_BINDGEN_VERSION}"; then
-            cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked --force
-          fi
-          wasm-bindgen --version
-      - name: 编译 wasm
-        run: ./scripts/build-wasm.sh
+      - uses: ./.github/actions/build-wasm
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -96,11 +96,20 @@ jobs:
           npm ci
           npm run build
           npm test
-      - name: 打包 npm tarball
+      - name: 在最低与最新 Node 上复测（engines >= 20）
+        working-directory: packages/geoverse-precise
+        run: |
+          for v in 20 24; do
+            echo "::group::node $v"
+            npx -y -p "node@$v" node --test test/*.test.mjs
+            echo "::endgroup::"
+          done
+      - name: 打包 npm tarball 并检查包结构
         working-directory: packages/geoverse-precise
         run: |
           cp ../../LICENSE-MIT ../../LICENSE-APACHE .
           npm pack
+          npx -y publint@0.3 --strict
       - name: 构建演示页
         working-directory: examples/web-demo
         run: |

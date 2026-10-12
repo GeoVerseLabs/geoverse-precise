@@ -22,7 +22,7 @@ updates:
       npm-minor:
         update-types: [minor, patch]
     ignore:
-      # @types/node 的主版本应跟随支持的最低 Node 版本（≥ 18，CI 用 22），不随最新 Node 升级
+      # @types/node 的主版本跟随 CI 主力 Node 版本（22；支持范围 >= 20，CI 另在 20 与 24 上复测），不随最新 Node 升级
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
 

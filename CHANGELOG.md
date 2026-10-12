@@ -17,10 +17,19 @@
 
 ## [Unreleased]
 
-### ⚠ 不兼容变更：项目更名为 geoverse-precise
-仓库迁至 [GeoVerseLabs/geoverse-precise](https://github.com/GeoVerseLabs/geoverse-precise)，所有包名随之更改：
+### 计划（来自 DESIGN.md §8）
+- `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。
 
-| 项 | 0.3.0 及以前 | 现在 |
+## [0.4.0] - 2026-10-12
+
+以 **geoverse-precise** 之名的首个发布版本：计算功能与 0.3.0 相同，项目更名并补齐了发布所需的工程配置。
+预编译的 npm 包随 GitHub Release 提供。
+
+### ⚠ 不兼容变更
+
+**项目更名为 geoverse-precise。** 仓库迁至 [GeoVerseLabs/geoverse-precise](https://github.com/GeoVerseLabs/geoverse-precise)，所有包名随之更改：
+
+| 项 | 0.3.0 及以前 | 0.4.0 |
 |---|---|---|
 | npm 包 | `geoprecise` | `geoverse-precise` |
 | Rust crate | `geoprecise-core` / `geoprecise-wasm` | `geoverse-precise-core` / `geoverse-precise-wasm` |
@@ -33,21 +42,28 @@
 迁移：`import … from 'geoprecise'` 改为 `from 'geoverse-precise'`；读取上述两个结果属性的代码同步改键名。
 函数名、参数与计算结果均无变化。`bench/out/` 下的历史结果文件保留 0.3.0 运行时的原始键名。
 
-### 变更
-- 全部 Rust 源码按 `rustfmt.toml` 统一格式化（纯格式，无逻辑改动；`cargo test` 结果不变）。
-- 新增本更新日志；README 增加「版本管理」一节。
-- 批量接口中固定步长的 `chunks_exact(N)` 改为 `as_chunks::<N>()`（行为不变；消除 Rust 1.99 clippy 新增的 `chunks_exact_with_const_size` 告警）。
-- Cargo 与 npm 清单补充 `repository` / `homepage` / `bugs` 等元数据；npm 包内附带许可证文件。
+**Node.js 最低版本为 20**（`engines: node >= 20`；Node 18 已停止维护）。CI 在 Node 20 / 22 / 24 上运行测试。
 
 ### 新增
+- npm 包自带 README（安装、初始化、用法、从 turf 迁移）与许可证文件。
 - 许可证文件 `LICENSE-MIT`、`LICENSE-APACHE`（此前仅在清单中声明 `MIT OR Apache-2.0`）。
-- `CONTRIBUTING.md`（环境、流程、提交约定、发布步骤）与 `SECURITY.md`。
-- GitHub 配置：CI 工作流（fmt / clippy / test、编译 wasm 并跑 TS 测试、产出 npm 包）、
-  标签触发的 Release 工作流、Dependabot、Issue 模板（缺陷 / 精度问题 / 功能建议）与 PR 模板。
-- CI 构建演示页并在无头浏览器中做冒烟测试（`examples/web-demo/smoke.mjs`），覆盖仅靠构建发现不了的运行期问题。
+- 演示页（turf 与 geoverse-precise 缓冲区对比）可部署到 GitHub Pages。
 
-### 计划（来自 DESIGN.md §8）
-- `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。
+### 变更
+- 批量接口中固定步长的 `chunks_exact(N)` 改为 `as_chunks::<N>()`（行为不变；消除 Rust 1.99 clippy 新增的 `chunks_exact_with_const_size` 告警）。
+- Cargo 与 npm 清单补充 `repository` / `homepage` / `bugs` / `author` 等元数据；
+  `geoverse-precise-core` 打包时排除依赖仓库数据的对照测试。
+- 依赖：thiserror 2.0.20 → 2.0.21。
+
+### 工程
+- 全部 Rust 源码按 `rustfmt.toml` 统一格式化（纯格式，无逻辑改动）。
+- CI：fmt / clippy（门禁固定 1.97.0，另以最新 stable 做提示性检查）/ 测试；最低 Rust 版本（1.88）检查；
+  编译 wasm 后在 Node 20 / 22 / 24 上跑 TS 测试；`publint` 检查包结构；构建演示页并在无头浏览器中做冒烟测试。
+- Release 工作流：发版 PR 合并到 `main` 后，若该版本尚无标签，自动校验版本号与 CHANGELOG、编译测试打包、
+  生成构建来源证明，创建标签与 GitHub Release（附 npm 包与 `SHA256SUMS.txt`），并部署演示页；
+  也支持手动推送标签发版与手动演练。
+- Dependabot、Issue 模板（缺陷 / 精度问题 / 功能建议）、PR 模板、CODEOWNERS。
+- 文档：本更新日志、`CONTRIBUTING.md`、`SECURITY.md`，README 增加安装、版本管理与反馈渠道。
 
 ## [0.3.0] - 2026-09-30 · 里程碑 v1.2
 
@@ -99,3 +115,7 @@ turf 覆盖层：`@turf/turf` 的 **184 个导出全部同名实现**，可整�
 - 坐标转换：WGS84 / CGCS2000 / GCJ-02 / BD-09 / Web 墨卡托 / UTM / CGCS2000 高斯-克吕格（3°/6° 带），GCJ-02 与 BD-09 逆算迭代求解。
 - 通用选项 `units` `crs` `edges` `tolerance`。
 - 与 GeographicLib / PROJ 的对照测试与精度基准（`bench/`）、MapLibre 对比演示页（`examples/web-demo`）。
+
+[Unreleased]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/GeoVerseLabs/geoverse-precise/tree/v0.3.0

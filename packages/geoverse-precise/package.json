@@ -1,6 +1,6 @@
 {
   "name": "geoverse-precise",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Ellipsoid-accurate spatial analysis in WebAssembly: geodesic measurement, China CRS (GCJ-02 / BD-09 / CGCS2000) transforms, geodesic buffers and robust overlay. turf-style API.",
   "repository": {
     "type": "git",
@@ -44,6 +44,10 @@
     "buffer"
   ],
   "license": "MIT OR Apache-2.0",
+  "author": "GeoVerseLabs",
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@types/geojson": "^7946.0.16",
     "@types/node": "^22.0.0",
