@@ -81,21 +81,15 @@ npm 包名为 `@geoverse/geoverse-precise`，归属 npm 组织 `geoverse`。发�
 （GitHub Actions OIDC，无需 token）把 Release 中的同一个 `.tgz` 发布到 npm，并自动生成 provenance。
 该任务只在仓库变量 `NPM_PUBLISH` 为 `true` 时执行。
 
-一次性准备（npm 要求包先存在，才能配置可信发布；本仓库已于 0.5.0 完成）：
+一次性准备（npm 要求包先存在，才能配置可信发布）：
 
 1. **首次手动发布**：从 GitHub Release 下载 `geoverse-geoverse-precise-X.Y.Z.tgz`，用 `geoverse` 组织中有发布权限、
    已开启两步验证的账号执行 `npm login`，然后 `npm publish ./geoverse-geoverse-precise-X.Y.Z.tgz --access public`。
 2. **配置可信发布**：npmjs.com → 包 `@geoverse/geoverse-precise` → Settings → Trusted Publisher → GitHub Actions：
-   - Organization or user `GeoVerseLabs`，Repository `geoverse-precise`，Workflow filename `release.yml`，Environment 留空；
-   - **Allowed actions 勾选 “Allow npm publish”**。不勾选时只允许 `npm stage publish`（暂存后由维护者用
-     `npm stage approve` 加 2FA 手动放行），CI 中的 `npm publish` 会以 `E403 OIDC permission denied` 失败。
-     “Allow npm dist-tag” 不需要（dist-tag 随 `npm publish --tag` 一起设置）。
+   Organization or user `GeoVerseLabs`，Repository `geoverse-precise`，Workflow filename `release.yml`，Environment 留空。
 3. **打开开关**：GitHub 仓库 Settings → Secrets and variables → Actions → Variables，新建 `NPM_PUBLISH` = `true`。
-4. **48 小时内完成首次 CI 发布**：可信发布配置在首次成功发布前只保留 48 小时，过期后需删除重建。
-   首次通过 CI 发布成功后配置即长期有效，之后在包设置的 Publishing access 中选择
-   “Require two-factor authentication and disallow tokens”。
-
-发布后 `release.yml` 会核对 npm 上该版本的 SHA-1 与 Release 附件一致，并检查是否带 provenance。
+4. 可信发布配置在首次成功发布前只保留 48 小时，过期后需重新创建。所以第 2、3 步最好放在下一次发版 PR 合并前进行；
+   首次通过 CI 发布成功后配置即长期有效，之后可在包设置中开启 “Require two-factor authentication and disallow tokens”。
 
 crates.io 目前不自动发布；发布 `geoverse-precise-core` 前注意需带上许可证文本（目前只在仓库根目录）。
 

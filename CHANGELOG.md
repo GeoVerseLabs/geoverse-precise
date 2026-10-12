@@ -26,8 +26,6 @@
 
 ### 工程
 - npm 发布任务：发布失败且为 E403 时给出可信发布配置的排查提示；发布后核对 npm 上的 SHA-1 与 Release 附件一致，并检查 provenance。
-- README 与包内 README 增加 npm 版本徽章。
-- CONTRIBUTING「发布到 npm」补充 Allowed actions 需勾选 “Allow npm publish”、首次 CI 发布的 48 小时期限。
 
 ## [0.5.0] - 2026-10-12
 
