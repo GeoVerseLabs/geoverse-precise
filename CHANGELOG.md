@@ -20,6 +20,13 @@
 ### 计划（来自 DESIGN.md §8）
 - `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。
 
+## [0.5.1] - 2026-10-12
+
+首个由 CI 通过 npm 可信发布（OIDC）发布、带构建来源证明（provenance）的版本。计算功能与 0.5.0 相同。
+
+### 工程
+- npm 发布任务：发布失败且为 E403 时给出可信发布配置的排查提示；发布后核对 npm 上的 SHA-1 与 Release 附件一致，并检查 provenance。
+
 ## [0.5.0] - 2026-10-12
 
 首个发布到 npm 的版本，包名为 **`@geoverse/geoverse-precise`**（归属 npm 组织 `geoverse`）。计算功能与 0.4.0 相同。
@@ -131,7 +138,8 @@ turf 覆盖层：`@turf/turf` 的 **184 个导出全部同名实现**，可整�
 - 通用选项 `units` `crs` `edges` `tolerance`。
 - 与 GeographicLib / PROJ 的对照测试与精度基准（`bench/`）、MapLibre 对比演示页（`examples/web-demo`）。
 
-[Unreleased]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/GeoVerseLabs/geoverse-precise/tree/v0.3.0

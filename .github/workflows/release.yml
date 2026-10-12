@@ -209,8 +209,34 @@ jobs:
             exit 0
           fi
           case "$VER" in *-*) TAG=next ;; *) TAG=latest ;; esac
-          npm publish "$TGZ" --access public --tag "$TAG"
+          set -o pipefail
+          if ! npm publish "$TGZ" --access public --tag "$TAG" 2>&1 | tee publish.log; then
+            if grep -q "E403" publish.log; then
+              echo "::error::npm 拒绝了可信发布（E403）。请检查 npmjs.com → ${PKG} → Settings → Trusted Publisher："
+              echo "::error::Allowed actions 需勾选 “Allow npm publish”；仓库 / 工作流文件名（release.yml）需与配置一致；未验证的配置 48 小时后失效"
+            fi
+            exit 1
+          fi
           echo "::notice::已发布 ${PKG}@${VER}（dist-tag: ${TAG}）"
+      - name: 确认 npm 上的版本与构建来源证明
+        env:
+          VER: ${{ needs.build.outputs.version }}
+        run: |
+          TGZ=$(ls release/*.tgz)
+          PKG=$(tar -xOzf "$TGZ" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).name")
+          EXPECT=$(sha1sum "$TGZ" | cut -d' ' -f1)
+          for i in $(seq 12); do
+            GOT=$(npm view "${PKG}@${VER}" dist.shasum 2>/dev/null || true)
+            [ -n "$GOT" ] && break
+            sleep 10
+          done
+          echo "npm shasum: ${GOT:-<missing>}  release tgz: ${EXPECT}"
+          [ "$GOT" = "$EXPECT" ] || { echo "::error::npm 上的 ${PKG}@${VER} 与 Release 附件不一致"; exit 1; }
+          if npm view "${PKG}@${VER}" dist.attestations.url 2>/dev/null | grep -q .; then
+            echo "::notice::${PKG}@${VER} 已带 provenance"
+          else
+            echo "::warning::${PKG}@${VER} 未检测到 provenance（仅在可信发布、公开仓库与公开包时自动生成）"
+          fi
 
   pages-check:
     name: 检查 GitHub Pages 是否已开启
