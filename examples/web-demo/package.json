@@ -8,8 +8,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@geoverse/geoverse-precise": "file:../../packages/geoverse-precise",
     "@turf/turf": "^7.2.0",
-    "geoverse-precise": "file:../../packages/geoverse-precise",
     "maplibre-gl": "^5.0.0"
   },
   "devDependencies": {

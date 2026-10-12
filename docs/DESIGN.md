@@ -163,7 +163,7 @@ Karney 截距算法：以当前估计点为中心做**椭球心射投影**（大
 ## 4. API（TypeScript）
 
 ```ts
-import * as gp from 'geoverse-precise';
+import * as gp from '@geoverse/geoverse-precise';
 await gp.init();                                 // 加载 wasm，一次即可（Node 下自动读文件）
 
 gp.distance(a, b, { units, crs });               // 默认 km

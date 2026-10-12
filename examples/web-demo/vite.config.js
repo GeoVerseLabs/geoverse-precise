@@ -5,5 +5,5 @@ export default defineConfig({
   base: process.env.DEMO_BASE || '/',
   // top-level await (used to load the WASM module once)
   build: { target: 'es2022' },
-  optimizeDeps: { exclude: ['geoverse-precise'], esbuildOptions: { target: 'es2022' } },
+  optimizeDeps: { exclude: ['@geoverse/geoverse-precise'], esbuildOptions: { target: 'es2022' } },
 });

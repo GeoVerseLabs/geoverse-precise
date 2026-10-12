@@ -29,21 +29,26 @@ Rust 编写、编译为 WebAssembly 的**椭球精度**客户端空间分析库�
 
 ## 安装
 
-尚未发布到 npm。每个版本的预编译 npm 包附在 [Releases](https://github.com/GeoVerseLabs/geoverse-precise/releases) 中，可直接按地址安装：
-
 ```bash
-npm install https://github.com/GeoVerseLabs/geoverse-precise/releases/download/v0.4.0/geoverse-precise-0.4.0.tgz
+npm install @geoverse/geoverse-precise
 ```
 
 纯 ESM 包，需要 Node.js ≥ 20，或支持 `new URL('…wasm', import.meta.url)` 的打包工具（Vite、webpack 5、Rollup、esbuild）。
-附件的 SHA256 见同一 Release 的 `SHA256SUMS.txt`，构建来源证明可用 `gh attestation verify <tgz> -R GeoVerseLabs/geoverse-precise` 校验。
+由 CI 发布到 npm 的版本附带构建来源证明（provenance），可在 npm 包页面查看对应的源码提交与构建记录。
 
-也可以从源码构建（见下文「构建」）。每次 CI 运行也会产出 npm 包，在对应 Actions 运行页的 Artifacts 中下载。
+每个版本也以附件形式发布在 [Releases](https://github.com/GeoVerseLabs/geoverse-precise/releases)，可离线安装：
+
+```bash
+npm install ./geoverse-geoverse-precise-X.Y.Z.tgz
+```
+
+附件的 SHA256 见同一 Release 的 `SHA256SUMS.txt`，构建来源证明可用 `gh attestation verify <tgz> -R GeoVerseLabs/geoverse-precise` 校验。
+也可以从源码构建（见下文「构建」）。
 
 ## 快速开始
 
 ```ts
-import * as gp from 'geoverse-precise';
+import * as gp from '@geoverse/geoverse-precise';
 await gp.init();
 
 gp.distance([116.397, 39.909], [121.474, 31.230]);            // 1066.78 km（椭球）
@@ -88,7 +93,7 @@ gp.shortestPath(a, b, { obstacles, resolution: 1 }); // 绕障并拉紧
 turf 的纯 JS 助手层（构造器、遍历、单位换算、`geojsonRbush`）也一并提供，且不需要 `init()`：
 
 ```ts
-import { point, coordEach, convertLength, geojsonRbush } from 'geoverse-precise';
+import { point, coordEach, convertLength, geojsonRbush } from '@geoverse/geoverse-precise';
 ```
 
 从 turf 迁移：函数名、参数顺序、默认单位（kilometers）、返回的 GeoJSON 形态都与 turf 一致。差异只有：

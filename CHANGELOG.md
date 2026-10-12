@@ -20,6 +20,21 @@
 ### 计划（来自 DESIGN.md §8）
 - `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。
 
+## [0.5.0] - 2026-10-12
+
+首个发布到 npm 的版本，包名为 **`@geoverse/geoverse-precise`**（归属 npm 组织 `geoverse`）。计算功能与 0.4.0 相同。
+
+### ⚠ 不兼容变更
+- npm 包名 `geoverse-precise` → `@geoverse/geoverse-precise`。
+  迁移：`import … from 'geoverse-precise'` 改为 `from '@geoverse/geoverse-precise'`，安装改为 `npm install @geoverse/geoverse-precise`。
+  仓库名、Rust crate 名（`geoverse-precise-core` / `geoverse-precise-wasm`）、wasm 产物文件名与结果属性键名（`geoverse-precise:fixes` 等）均不变。
+- Release 附件的文件名随之变为 `geoverse-geoverse-precise-X.Y.Z.tgz`。
+
+### 工程
+- Release 工作流新增 npm 发布任务：以可信发布（OIDC）方式发布 Release 中的同一个 `.tgz`，自动生成 provenance；
+  版本号含 `-` 时发布到 `next` dist-tag；该版本已在 npm 上时跳过。由仓库变量 `NPM_PUBLISH=true` 开启。
+- `package.json` 增加 `publishConfig.access = public`。
+
 ## [0.4.0] - 2026-10-12
 
 以 **geoverse-precise** 之名的首个发布版本：计算功能与 0.3.0 相同，项目更名并补齐了发布所需的工程配置。
@@ -116,6 +131,7 @@ turf 覆盖层：`@turf/turf` 的 **184 个导出全部同名实现**，可整�
 - 通用选项 `units` `crs` `edges` `tolerance`。
 - 与 GeographicLib / PROJ 的对照测试与精度基准（`bench/`）、MapLibre 对比演示页（`examples/web-demo`）。
 
-[Unreleased]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/GeoVerseLabs/geoverse-precise/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/GeoVerseLabs/geoverse-precise/tree/v0.3.0

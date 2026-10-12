@@ -1,7 +1,7 @@
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as turf from '@turf/turf';
-import * as gp from 'geoverse-precise';
+import * as gp from '@geoverse/geoverse-precise';
 
 await gp.init();
 

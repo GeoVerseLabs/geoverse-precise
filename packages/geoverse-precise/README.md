@@ -10,18 +10,18 @@ that measures on the WGS84 ellipsoid instead of a sphere and understands China's
 
 ## Install
 
-Prebuilt packages are attached to each [GitHub Release](https://github.com/GeoVerseLabs/geoverse-precise/releases):
-
 ```bash
-npm install https://github.com/GeoVerseLabs/geoverse-precise/releases/download/v0.4.0/geoverse-precise-0.4.0.tgz
+npm install @geoverse/geoverse-precise
 ```
+
+Each version is also attached to its [GitHub Release](https://github.com/GeoVerseLabs/geoverse-precise/releases) with SHA-256 checksums.
 
 ESM only. Node.js ≥ 20, or any bundler that handles `new URL('…wasm', import.meta.url)` (Vite, webpack 5, Rollup, esbuild).
 
 ## Usage
 
 ```ts
-import * as gp from 'geoverse-precise';
+import * as gp from '@geoverse/geoverse-precise';
 
 await gp.init(); // loads the .wasm once (fetch in browsers, file read in Node)
 
@@ -47,7 +47,7 @@ zone.free();
 
 ## Migrating from turf
 
-Replace `import * as turf from '@turf/turf'` with `import * as turf from 'geoverse-precise'` and call
+Replace `import * as turf from '@turf/turf'` with `import * as turf from '@geoverse/geoverse-precise'` and call
 `await turf.init()` once at start-up. Results differ from turf where turf is spherical or works in degrees
 (distances, areas, buffers, grids); see the
 [function-by-function comparison](https://github.com/GeoVerseLabs/geoverse-precise/blob/main/docs/TURF-COVERAGE.md)
