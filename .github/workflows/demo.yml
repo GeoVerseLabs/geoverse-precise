@@ -2,10 +2,9 @@ name: Demo
 
 # 把 examples/web-demo（turf 与 geoverse-precise 缓冲区对比页）部署到 GitHub Pages。
 # 前提：仓库 Settings → Pages → Source 选择 “GitHub Actions”。
-# 推送版本标签时自动部署，也可在 Actions 页面手动运行。
+# 发版时由 release.yml 调用；也可在 Actions 页面手动运行。
 on:
-  push:
-    tags: ['v*.*.*']
+  workflow_call:
   workflow_dispatch:
 
 permissions:

@@ -1,10 +1,15 @@
 name: Release
 
-# 推送 vX.Y.Z 标签：校验 → 编译 → 测试 → 打包 → 生成构建来源证明 → 创建 GitHub Release（附 npm 包与校验和）。
-# 手动运行（Actions → Release → Run workflow）：只做到打包为止，产物作为 workflow artifact 下载，
-# 用于打标签前的演练。不自动发布到 npm / crates.io。
+# 三种触发方式：
+# - 合并到 main（推荐）：若 Cargo.toml 中的版本号还没有对应的 vX.Y.Z 标签，则校验 → 编译 → 测试 → 打包 →
+#   生成构建来源证明 → 创建标签与 GitHub Release（附 npm 包与校验和）→ 部署演示页。
+#   版本号已有标签时什么都不做，所以普通提交合并到 main 不会触发发版。
+# - 推送 vX.Y.Z 标签：同上，用于手动打标签发版。
+# - 手动运行（Actions → Release → Run workflow）：演练，只做到打包为止，产物作为 workflow artifact 下载。
+# 不自动发布到 npm / crates.io。
 on:
   push:
+    branches: [main]
     tags: ['v*.*.*']
   workflow_dispatch:
     inputs:
@@ -15,12 +20,48 @@ on:
 permissions:
   contents: read
 
+# 同一时间只跑一个发版流程，避免“合并到 main”与“推送标签”同时发同一个版本
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  plan:
+    name: 判断是否发版
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      build: ${{ steps.plan.outputs.build }}
+      publish: ${{ steps.plan.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: plan
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VER="${GITHUB_REF_NAME#v}"; BUILD=true; PUBLISH=true
+          elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            VER="${INPUT_VERSION#v}"; BUILD=true; PUBLISH=false
+          else
+            VER=$(grep -m1 -E '^version *= *"' Cargo.toml | sed -E 's/.*"(.*)".*/\1/')
+            if git ls-remote --exit-code --tags origin "refs/tags/v${VER}" >/dev/null; then
+              echo "::notice::v${VER} 已存在，本次合并不发版"
+              BUILD=false; PUBLISH=false
+            else
+              echo "::notice::main 上的版本 ${VER} 尚无标签，开始发版 v${VER}"
+              BUILD=true; PUBLISH=true
+            fi
+          fi
+          { echo "version=$VER"; echo "build=$BUILD"; echo "publish=$PUBLISH"; } | tee -a "$GITHUB_OUTPUT"
+
   build:
     name: 校验、编译与打包
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.ver.outputs.version }}
@@ -31,9 +72,8 @@ jobs:
       - name: 确定版本号并校验清单与 CHANGELOG
         id: ver
         env:
-          INPUT_VERSION: ${{ inputs.version }}
+          VER: ${{ needs.plan.outputs.version }}
         run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then VER="${GITHUB_REF_NAME#v}"; else VER="${INPUT_VERSION#v}"; fi
           CARGO_VER=$(grep -m1 -E '^version *= *"' Cargo.toml | sed -E 's/.*"(.*)".*/\1/')
           NPM_VER=$(node -p "require('./packages/geoverse-precise/package.json').version")
           echo "version=$VER cargo=$CARGO_VER npm=$NPM_VER"
@@ -106,9 +146,9 @@ jobs:
           retention-days: 30
 
   publish:
-    name: 创建 GitHub Release
-    needs: build
-    if: github.ref_type == 'tag'
+    name: 创建标签与 GitHub Release
+    needs: [plan, build]
+    if: needs.plan.outputs.publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -123,9 +163,42 @@ jobs:
           subject-path: release/*.tgz
       - uses: softprops/action-gh-release@v3
         with:
+          tag_name: v${{ needs.build.outputs.version }}
+          # 合并到 main 触发时标签尚不存在，按本次提交创建
+          target_commitish: ${{ github.sha }}
           name: geoverse-precise v${{ needs.build.outputs.version }}
           body_path: release-notes.md
           prerelease: ${{ needs.build.outputs.prerelease == 'true' }}
           files: |
             release/*.tgz
             release/SHA256SUMS.txt
+
+  pages-check:
+    name: 检查 GitHub Pages 是否已开启
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      pages: read
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" >/dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::GitHub Pages 未开启（Settings → Pages → Source 选 GitHub Actions），跳过演示页部署"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  demo:
+    name: 部署演示页
+    needs: pages-check
+    if: needs.pages-check.outputs.enabled == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/demo.yml

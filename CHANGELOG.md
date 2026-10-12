@@ -20,7 +20,7 @@
 ### 计划（来自 DESIGN.md §8）
 - `Prepared` 复用 area / length / buffer；二进制几何通道；`precision: 'fast'` 快速测量；Web Worker 封装；cargo feature 瘦身。
 
-## [0.4.0] - 2026-10-11
+## [0.4.0] - 2026-10-12
 
 以 **geoverse-precise** 之名的首个发布版本：计算功能与 0.3.0 相同，项目更名并补齐了发布所需的工程配置。
 预编译的 npm 包随 GitHub Release 提供。
@@ -59,8 +59,9 @@
 - 全部 Rust 源码按 `rustfmt.toml` 统一格式化（纯格式，无逻辑改动）。
 - CI：fmt / clippy（门禁固定 1.97.0，另以最新 stable 做提示性检查）/ 测试；最低 Rust 版本（1.88）检查；
   编译 wasm 后在 Node 20 / 22 / 24 上跑 TS 测试；`publint` 检查包结构；构建演示页并在无头浏览器中做冒烟测试。
-- Release 工作流：推送 `vX.Y.Z` 标签后校验版本号与 CHANGELOG、编译测试打包、生成构建来源证明，
-  创建 GitHub Release（附 npm 包与 `SHA256SUMS.txt`）；支持手动演练。
+- Release 工作流：发版 PR 合并到 `main` 后，若该版本尚无标签，自动校验版本号与 CHANGELOG、编译测试打包、
+  生成构建来源证明，创建标签与 GitHub Release（附 npm 包与 `SHA256SUMS.txt`），并部署演示页；
+  也支持手动推送标签发版与手动演练。
 - Dependabot、Issue 模板（缺陷 / 精度问题 / 功能建议）、PR 模板、CODEOWNERS。
 - 文档：本更新日志、`CONTRIBUTING.md`、`SECURITY.md`，README 增加安装、版本管理与反馈渠道。
 

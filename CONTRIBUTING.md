@@ -54,28 +54,25 @@ cd packages/geoverse-precise && npm run build && npm test
 
 ## 发布
 
-`main` 受分支规则保护，所有改动（包括发版提交）都通过 PR 合入。
+`main` 只通过 PR 更新。发版 = 合并一个提升了版本号的 PR，标签与 Release 由工作流自动创建。
 
 1. 新建分支 `release/vX.Y.Z`，在其中：
    - 把 `CHANGELOG.md` 的 `[Unreleased]` 整理为 `## [X.Y.Z] - YYYY-MM-DD`，并新建空的 `[Unreleased]`；
    - 同步版本号：`Cargo.toml`（`[workspace.package] version`）与 `packages/geoverse-precise/package.json`，
-     然后执行 `cargo check` 与 `cd packages/geoverse-precise && npm install --package-lock-only` 更新两个锁文件；
-   - 提交 `chore(release): vX.Y.Z`，推送并发 PR，CI 全绿后合并。
-2. **演练**：Actions → Release → Run workflow，填入 `X.Y.Z`。演练会做完版本与 CHANGELOG 校验、
-   编译、测试、打包、`publint`，产物（`.tgz`、`SHA256SUMS.txt`、发布说明）作为 artifact 供下载检查，不创建 Release。
-3. 在合并后的 `main` 上打附注标签并推送：
+     然后执行 `cargo check` 与 `cd packages/geoverse-precise && npm install --package-lock-only` 更新锁文件；
+   - 提交 `chore(release): vX.Y.Z`，推送并发 PR。
+2. **演练**（可选，推荐）：Actions → Release → Run workflow，分支选 `release/vX.Y.Z`，填入 `X.Y.Z`。
+   演练会做完版本与 CHANGELOG 校验、编译、测试、打包、`publint`，产物（`.tgz`、`SHA256SUMS.txt`、发布说明）
+   作为 artifact 供下载检查，不创建标签和 Release。
+3. CI 全绿后合并 PR。`release.yml` 在 `main` 上发现 `vX.Y.Z` 标签不存在，于是自动：
+   - 重复第 2 步的全部校验与构建，为 `.tgz` 生成构建来源证明（attestation）；
+   - 在合并后的提交上创建标签 `vX.Y.Z` 与 GitHub Release，附 `.tgz` 与 `SHA256SUMS.txt`，说明取自 CHANGELOG 对应段落；
+     版本号带 `-`（如 `0.5.0-rc.1`）时标记为预发布；
+   - 若已开启 GitHub Pages（Settings → Pages → Source 选 GitHub Actions），部署演示页；未开启则跳过并给出提示。
+4. 合并后同步本地：`git switch main && git pull --ff-only && git fetch --tags`。
 
-   ```bash
-   git switch main && git pull --ff-only
-   git tag -a vX.Y.Z -m "geoverse-precise vX.Y.Z"
-   git push origin vX.Y.Z
-   ```
-
-4. 标签推送后自动执行：
-   - `release.yml`：重复第 2 步的全部校验与构建，为 `.tgz` 生成构建来源证明（attestation），
-     创建 GitHub Release，附 `.tgz` 与 `SHA256SUMS.txt`，说明取自 CHANGELOG 对应段落；
-     版本号带 `-`（如 `0.5.0-rc.1`）时标记为预发布。
-   - `demo.yml`：把演示页部署到 GitHub Pages（需在 Settings → Pages 中把 Source 设为 GitHub Actions）。
+版本号已有标签时，合并到 `main` 不会触发发版，所以日常 PR 不受影响。
+也可以照旧手动推送附注标签发版（`git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`），流程相同。
 
 目前不自动发布到 npm / crates.io。需要时在 Release 之后手动执行 `npm publish` / `cargo publish`；
 发布 crate 前注意 `geoverse-precise-core` 需带上许可证文本（目前只在仓库根目录）。
