@@ -6,7 +6,7 @@ name: Release
 #   版本号已有标签时什么都不做，所以普通提交合并到 main 不会触发发版。
 # - 推送 vX.Y.Z 标签：同上，用于手动打标签发版。
 # - 手动运行（Actions → Release → Run workflow）：演练，只做到打包为止，产物作为 workflow artifact 下载。
-# 不自动发布到 npm / crates.io。
+# 仓库变量 NPM_PUBLISH=true 时，同时以可信发布（OIDC）方式发布到 npm；不发布到 crates.io。
 on:
   push:
     branches: [main]
@@ -112,7 +112,8 @@ jobs:
           VER: ${{ steps.ver.outputs.version }}
         run: |
           mkdir -p release
-          cp "packages/geoverse-precise/geoverse-precise-${VER}.tgz" release/
+          cp packages/geoverse-precise/*.tgz release/
+          ls release/*.tgz | grep -q -- "-${VER}.tgz$" || { echo "::error::打包产物的版本号不是 ${VER}"; exit 1; }
           (cd release && sha256sum -- * > SHA256SUMS.txt && cat SHA256SUMS.txt)
 
       - name: 生成发布说明（取自 CHANGELOG）
@@ -120,6 +121,8 @@ jobs:
           VER: ${{ steps.ver.outputs.version }}
           REPO: ${{ github.repository }}
         run: |
+          PKG=$(node -p "require('./packages/geoverse-precise/package.json').name")
+          TGZ=$(cd release && ls *.tgz)
           {
             awk -v v="$VER" '
               $0 ~ "^## \\[" v "\\]" {on=1; next}
@@ -130,10 +133,11 @@ jobs:
             echo "## 安装"
             echo
             echo '```bash'
-            echo "npm install https://github.com/${REPO}/releases/download/v${VER}/geoverse-precise-${VER}.tgz"
+            echo "npm install ${PKG}@${VER}"
             echo '```'
             echo
-            echo "附件的 SHA256 见 \`SHA256SUMS.txt\`；构建来源证明可用 \`gh attestation verify geoverse-precise-${VER}.tgz -R ${REPO}\` 校验。"
+            echo "离线安装可下载附件 \`${TGZ}\`。附件的 SHA256 见 \`SHA256SUMS.txt\`；"
+            echo "构建来源证明可用 \`gh attestation verify ${TGZ} -R ${REPO}\` 校验。"
           } > release-notes.md
           cat release-notes.md
 
@@ -172,6 +176,41 @@ jobs:
           files: |
             release/*.tgz
             release/SHA256SUMS.txt
+
+  npm:
+    name: 发布到 npm
+    needs: [plan, build, publish]
+    # 仓库变量 NPM_PUBLISH=true 时才执行（在 npmjs.com 配好可信发布后再打开，见 CONTRIBUTING「发布到 npm」）
+    if: needs.plan.outputs.publish == 'true' && vars.NPM_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-${{ needs.build.outputs.version }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: 升级 npm（可信发布需要 npm >= 11.5.1）
+        run: |
+          npm install -g npm@11
+          npm --version
+      - name: npm publish（可信发布，自动生成 provenance）
+        env:
+          VER: ${{ needs.build.outputs.version }}
+        run: |
+          TGZ=$(ls release/*.tgz)
+          PKG=$(tar -xOzf "$TGZ" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).name")
+          if npm view "${PKG}@${VER}" version >/dev/null 2>&1; then
+            echo "::notice::${PKG}@${VER} 已在 npm 上，跳过"
+            exit 0
+          fi
+          case "$VER" in *-*) TAG=next ;; *) TAG=latest ;; esac
+          npm publish "$TGZ" --access public --tag "$TAG"
+          echo "::notice::已发布 ${PKG}@${VER}（dist-tag: ${TAG}）"
 
   pages-check:
     name: 检查 GitHub Pages 是否已开启

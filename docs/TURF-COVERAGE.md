@@ -2,7 +2,7 @@
 
 Every one of the **184 exports of `@turf/turf` 7.2** has a same-named export in
 `geoverse-precise`, so `import * as turf from '@turf/turf'` becomes
-`import * as turf from 'geoverse-precise'` — with one call to `await turf.init()` at
+`import * as turf from '@geoverse/geoverse-precise'` — with one call to `await turf.init()` at
 start-up, because the geometry runs in WebAssembly.
 
 The status column comes from `bench/turf-parity.mjs`, which runs both libraries

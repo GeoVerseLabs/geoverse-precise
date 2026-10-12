@@ -67,6 +67,7 @@ cd packages/geoverse-precise && npm run build && npm test
 3. CI 全绿后合并 PR。`release.yml` 在 `main` 上发现 `vX.Y.Z` 标签不存在，于是自动：
    - 重复第 2 步的全部校验与构建，为 `.tgz` 生成构建来源证明（attestation）；
    - 在合并后的提交上创建标签 `vX.Y.Z` 与 GitHub Release，附 `.tgz` 与 `SHA256SUMS.txt`，说明取自 CHANGELOG 对应段落；
+   - 已开启 npm 发布时（见下文），把同一个 `.tgz` 发布到 npm；
      版本号带 `-`（如 `0.5.0-rc.1`）时标记为预发布；
    - 若已开启 GitHub Pages（Settings → Pages → Source 选 GitHub Actions），部署演示页；未开启则跳过并给出提示。
 4. 合并后同步本地：`git switch main && git pull --ff-only && git fetch --tags`。
@@ -74,8 +75,23 @@ cd packages/geoverse-precise && npm run build && npm test
 版本号已有标签时，合并到 `main` 不会触发发版，所以日常 PR 不受影响。
 也可以照旧手动推送附注标签发版（`git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`），流程相同。
 
-目前不自动发布到 npm / crates.io。需要时在 Release 之后手动执行 `npm publish` / `cargo publish`；
-发布 crate 前注意 `geoverse-precise-core` 需带上许可证文本（目前只在仓库根目录）。
+### 发布到 npm
+
+npm 包名为 `@geoverse/geoverse-precise`，归属 npm 组织 `geoverse`。发版时 `release.yml` 的 `npm` 任务以**可信发布**
+（GitHub Actions OIDC，无需 token）把 Release 中的同一个 `.tgz` 发布到 npm，并自动生成 provenance。
+该任务只在仓库变量 `NPM_PUBLISH` 为 `true` 时执行。
+
+一次性准备（npm 要求包先存在，才能配置可信发布）：
+
+1. **首次手动发布**：从 GitHub Release 下载 `geoverse-geoverse-precise-X.Y.Z.tgz`，用 `geoverse` 组织中有发布权限、
+   已开启两步验证的账号执行 `npm login`，然后 `npm publish ./geoverse-geoverse-precise-X.Y.Z.tgz --access public`。
+2. **配置可信发布**：npmjs.com → 包 `@geoverse/geoverse-precise` → Settings → Trusted Publisher → GitHub Actions：
+   Organization or user `GeoVerseLabs`，Repository `geoverse-precise`，Workflow filename `release.yml`，Environment 留空。
+3. **打开开关**：GitHub 仓库 Settings → Secrets and variables → Actions → Variables，新建 `NPM_PUBLISH` = `true`。
+4. 可信发布配置在首次成功发布前只保留 48 小时，过期后需重新创建。所以第 2、3 步最好放在下一次发版 PR 合并前进行；
+   首次通过 CI 发布成功后配置即长期有效，之后可在包设置中开启 “Require two-factor authentication and disallow tokens”。
+
+crates.io 目前不自动发布；发布 `geoverse-precise-core` 前注意需带上许可证文本（目前只在仓库根目录）。
 
 ## 升级 wasm-bindgen
 
